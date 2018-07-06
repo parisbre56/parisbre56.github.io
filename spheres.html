@@ -363,15 +363,13 @@ function computeInsanityChances(nerveStatValue, advantageValue, pathLeft) {
 	
 	var totalOdds = 20;
 	if(advantageValue>0) { //At advantage
-		//At advantage, we have all the times we succeed in the first roll + all the times we fail in the first but succeed in the second roll. 
-		//The *20 is to simulate that we don't care what happens with the second roll in case the first succeeds
-		successOdds = successOdds*20 + failOdds*successOdds;
+		totalOdds = 400; //20*20
 		failOdds = failOdds*failOdds;
-		totalOdds = 400; //20*20
+		successOdds = totalOdds - failOdds;
 	} else if(advantageValue<0) { //At disadvantage
-		failOdds = failOdds*20 + successOdds*failOdds;
-		successOdds = successOdds*successOdds;
 		totalOdds = 400; //20*20
+		successOdds = successOdds*successOdds;
+		failOdds = totalOdds - successOdds;
 	}
 	var insanitySuccessCalculation = computeInsanityChances(nerveStatValue, advantageValue, pathLeft - 1);
 	var insanityFailureCalculation = computeInsanityChances(nerveStatValue-1, advantageValue, pathLeft - 1);
