@@ -124,69 +124,77 @@ span {
 	opacity: 0.5;
 }
 
+div {
+	max-width: 800px;
+}
+
+body {
+	max-width: 800px;
+}
+
 </style>
 <script>
 //Sphere size in pixels
-var sphereSize = 25;
-var imageWidth = 333;
-var imageHeight = 792;
+var sphereSize = 48;
+var imageWidth = 400;
+var imageHeight = 951;
 
 var spheres = [
-	["Ah",			{x: 168, y: 45, links: [
+	["Ah",			{x: 200, y: 50, stat: null, links: [
 										"Zon",
 										"Xi",
 										"Nehn"]}],
-	["Zon",			{x: 105, y: 100, links: [
+	["Zon",			{x: 125, y: 115, stat: null, links: [
 										"Ah",
 										"Xi",
 										"Nehn",
 										"Hel"]}],
-	["Xi",			{x: 230, y: 100, links: [
+	["Xi",			{x: 275, y: 115, stat: null, links: [
 										"Ah",
 										"Zon",
 										"Nehn",
 										"Sige"]}],
-	["Nehn",		{x: 168, y: 160, links: [
+	["Nehn",		{x: 200, y: 190, stat: null, links: [
 										"Ah",
 										"Zon",
 										"Xi",
 										"Hel",
 										"Sige",
 										"Es"]}],
-	["Hel",			{x: 105, y: 223, links: [
+	["Hel",			{x: 125, y: 265, stat: null, links: [
 										"Zon",
 										"Nehn",
 										"Sige",
 										"Es"]}],
-	["Sige",		{x: 230, y: 223, links: [
+	["Sige",		{x: 275, y: 265, stat: null, links: [
 										"Xi",
 										"Nehn",
 										"Hel",
 										"Es"]}],
-	["Es",			{x: 168, y: 285, links: [
+	["Es",			{x: 200, y: 340, stat: null, links: [
 										"Nehn",
 										"Hel",
 										"Sige",
 										"Telazch",
 										"Yengenze",
 										"Akhmah"]}],
-	["Telazch",		{x: 105, y: 340, links: [
+	["Telazch",		{x: 125, y: 405, stat: "Endurance", links: [
 										"Es",
 										"Yengenze",
 										"Akhmah",
 										"Tzimtzvot",
 										"Noth"]}],
-	["Yengenze",	{x: 230, y: 340, links: [
+	["Yengenze",	{x: 275, y: 405, stat: "Cunning", links: [
 										"Es",
 										"Telazch",
 										"Akhmah",
 										"Balarim",
 										"Konis"]}],
-	["Tzimtzvot",	{x: 35, y: 400, links: [
+	["Tzimtzvot",	{x: 50, y: 480, stat: "Strength", links: [
 										"Telazch",
 										"Akhmah",
 										"Noth"]}],
-	["Akhmah",		{x: 168, y: 400, links: [
+	["Akhmah",		{x: 200, y: 480, stat: "Awareness", links: [
 										"Es",
 										"Telazch",
 										"Yengenze",
@@ -195,57 +203,57 @@ var spheres = [
 										"Noth",
 										"Konis",
 										"Jal"]}],
-	["Balarim",		{x: 296, y: 400, links: [
+	["Balarim",		{x: 350, y: 480, stat: "Knowledge", links: [
 										"Yengenze",
 										"Akhmah",
 										"Konis"]}],
-	["Noth",		{x: 105, y: 457, links: [
+	["Noth",		{x: 125, y: 550, stat: "Dexterity", links: [
 										"Telazch",
 										"Tzimtzvot",
 										"Akhmah",
 										"Konis",
 										"Jal"]}],
-	["Konis",		{x: 230, y: 457, links: [
+	["Konis",		{x: 275, y: 550, stat: "Speed", links: [
 										"Yengenze",
 										"Akhmah",
 										"Balarim",
 										"Noth",
 										"Jal"]}],
-	["Jal",			{x: 168, y: 514, links: [
+	["Jal",			{x: 200, y: 625, stat: null, links: [
 										"Akhmah",
 										"Noth",
 										"Konis",
 										"Gesh",
 										"Hal",
 										"Undyne"]}],
-	["Gesh",		{x: 105, y: 574, links: [
+	["Gesh",		{x: 125, y: 690, stat: null, links: [
 										"Jal",
 										"Hal",
 										"Undyne",
 										"Non"]}],
-	["Hal",			{x: 230, y: 574, links: [
+	["Hal",			{x: 275, y: 690, stat: null, links: [
 										"Jal",
 										"Gesh",
 										"Undyne",
 										"Neth"]}],
-	["Undyne",		{x: 168, y: 636, links: [
+	["Undyne",		{x: 200, y: 765, stat: null, links: [
 										"Jal",
 										"Gesh",
 										"Hal",
 										"Non",
 										"Neth",
 										"En"]}],
-	["Non",			{x: 105, y: 700, links: [
+	["Non",			{x: 125, y: 840, stat: null, links: [
 										"Gesh",
 										"Undyne", 
 										"Neth", 
 										"En"]}],
-	["Neth",		{x: 230, y: 700, links: [
+	["Neth",		{x: 275, y: 840, stat: null, links: [
 										"Hal",
 										"Undyne",
 										"Non",
 										"En"]}],
-	["En",			{x: 168, y: 756, links: [
+	["En",			{x: 200, y: 910, stat: null, links: [
 										"Non",
 										"Neth",
 										"Undyne"]}]
