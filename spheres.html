@@ -451,6 +451,14 @@ function drawValidateAndLoad() {
 				console.log("Ignoring right click");
 				return false;
 			}
+			if(typeof evt.preventDefault === 'function') {
+				console.log("Called preventDefault");
+				evt.preventDefault();
+			}
+			if(typeof evt.stopPropagation === 'function') {
+				console.log("Called stopPropagation");
+				evt.stopPropagation();
+			}
 
 			//Else, if this is not a right click
 			var id = this.id;
