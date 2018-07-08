@@ -436,7 +436,7 @@ function drawValidateAndLoad() {
 		currArea.shape="circle";
 		currArea.coords=currSphere.x+","+currSphere.y+","+sphereSize;
 		currArea.alt=sphereName;
-		currArea.onmousedown=function() {
+		var downFun =function() {
 			var id = this.id;
 			lastClickStart = new Date().getTime();
 			pressed = true;
@@ -449,7 +449,9 @@ function drawValidateAndLoad() {
 				}, longPressMillis);
 			return false;
 		};
-		currArea.onmouseup=function() {
+		currArea.onmousedown = downFun;
+		currArea.ontouchstart = downFun;
+		var upFun=function() {
 			clearTimeout(pressTimer);
 			var currTime = new Date().getTime();
 			var passedTime = currTime - lastClickStart;
@@ -460,6 +462,19 @@ function drawValidateAndLoad() {
 			}
 			return false;
 		};
+		currArea.onmouseup = upFun;
+		currArea.ontouchend = upFun;
+		var cancelFun=function() {
+			clearTimeout(pressTimer);
+			var currTime = new Date().getTime();
+			var passedTime = currTime - lastClickStart;
+			pressed = false;
+			console.log("Mouse Up [id="+this.id+", currTime="+currTime+", passedTime="+passedTime+", pressed="+pressed+"]");
+			return false;
+		};
+		currArea.ontouchmove=cancelFun;
+		currArea.ontouchcancel=cancelFun;
+		
 		map.appendChild(currArea);
 	}
 	
