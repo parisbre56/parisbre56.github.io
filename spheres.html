@@ -405,6 +405,7 @@ function computeInsanityChances(nerveStatValue, advantageValue, pathLeft) {
 }
 
 function displaySphereInfo(sphereName) {
+	console.log("displaySphereInfo [sphereName="+sphereName+"]");
 	var sphereText = sphereName;
 	var currSphere = sphereMap.get(sphereName);
 	if(currSphere!=null) {
@@ -436,7 +437,22 @@ function drawValidateAndLoad() {
 		currArea.shape="circle";
 		currArea.coords=currSphere.x+","+currSphere.y+","+sphereSize;
 		currArea.alt=sphereName;
-		var downFun =function() {
+		var downFun =function(e) {
+			var isRightMB = false;
+			e = e || window.event;
+
+			if ("which" in e) { // Gecko (Firefox), WebKit (Safari/Chrome) & Opera
+				isRightMB = e.which == 3;
+			}
+			else if ("button" in e) {  // IE, Opera
+				isRightMB = e.button == 2;
+			}
+			if(isRightMB) {
+				console.log("Ignoring right click");
+				return false;
+			}
+
+			//Else, if this is not a right click
 			var id = this.id;
 			lastClickStart = new Date().getTime();
 			pressed = true;
@@ -474,6 +490,10 @@ function drawValidateAndLoad() {
 		};
 		currArea.ontouchmove=cancelFun;
 		currArea.ontouchcancel=cancelFun;
+		currArea.oncontextmenu=function() {
+			displaySphereInfo(this.id);
+			return false;
+		}
 		
 		map.appendChild(currArea);
 	}
@@ -568,7 +588,7 @@ function popLastSphere() {
 <body onload="drawValidateAndLoad()">
 	<noscript><span style="color: red; font-size: 300%;">This page requires JavaScript to work properly</span></noscript>
 	<div><input id="reset" name="reset" type="button" value="Reset" onclick="reset()"/></div>
-	<div>Click the spheres to select them. Clicking a sphere again reinforces it. Long click to display detailed information.</div>
+	<div>Click the spheres to select them. Clicking a sphere again reinforces it. Long click or right click to display detailed information.</div>
 	<div>	
 		<img id="sphereImage" src="spheres.png" alt="Spheres" usemap="#sphereMap">
 
