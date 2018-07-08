@@ -451,13 +451,13 @@ function drawValidateAndLoad() {
 				console.log("Ignoring right click");
 				return false;
 			}
-			if(typeof evt.preventDefault === 'function') {
+			if(e != null && typeof e.preventDefault === 'function') {
 				console.log("Called preventDefault");
-				evt.preventDefault();
+				e.preventDefault();
 			}
-			if(typeof evt.stopPropagation === 'function') {
+			if(e != null && typeof e.stopPropagation === 'function') {
 				console.log("Called stopPropagation");
-				evt.stopPropagation();
+				e.stopPropagation();
 			}
 
 			//Else, if this is not a right click
@@ -498,7 +498,16 @@ function drawValidateAndLoad() {
 		};
 		currArea.ontouchmove=cancelFun;
 		currArea.ontouchcancel=cancelFun;
-		currArea.oncontextmenu=function() {
+		currArea.oncontextmenu=function(e) {
+			e = e || window.event;
+			if(e != null && typeof e.preventDefault === 'function') {
+				console.log("Called preventDefault");
+				e.preventDefault();
+			}
+			if(e != null && typeof e.stopPropagation === 'function') {
+				console.log("Called stopPropagation");
+				e.stopPropagation();
+			}
 			displaySphereInfo(this.id);
 			return false;
 		}
