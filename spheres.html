@@ -506,9 +506,10 @@ function popLastSphere() {
 </head>
 <body onload="drawValidateAndLoad()">
 	<noscript>This page requires JavaScript to work properly</noscript>
+	<div><input id="reset" name="reset" type="button" value="Reset" onclick="reset()"/></div>
 	<div>Click the spheres to select them. Clicking a sphere again reinforces it.</div>
-	<div>
-		<img id="sphereImage" src="https://i.imgur.com/QRDCKzF.png" alt="Spheres" usemap="#sphereMap">
+	<div>	
+		<img id="sphereImage" src="spheres.png" alt="Spheres" usemap="#sphereMap">
 
 		<map id="sphereMap" name="sphereMap">
 		</map>
