@@ -125,11 +125,11 @@ span {
 }
 
 div {
-	max-width: 800px;
+	max-width: 1000px;
 }
 
 body {
-	max-width: 800px;
+	max-width: 1000px;
 }
 
 </style>
@@ -143,57 +143,57 @@ var spheres = [
 	["Ah",			{x: 200, y: 50, stat: null, links: [
 										"Zon",
 										"Xi",
-										"Nehn"]}],
+										"Nehn"], desc: "Creation: Specifically the act of creating something out of nothing. This isn't the same as say, building something out of different pieces, or taking it from somewhere and bringing it here. It is literally pulling raw matter and energy from nothing. And as such, it is the highest form of the motive powers." }],
 	["Zon",			{x: 125, y: 115, stat: null, links: [
 										"Ah",
 										"Xi",
 										"Nehn",
-										"Hel"]}],
+										"Hel"], desc: "Duplication: The act of replicating or copying something that already exists. This new object is created out of nothing, much like with the above, but it is a copy of an existing thing, not a new creation in and of itself." }],
 	["Xi",			{x: 275, y: 115, stat: null, links: [
 										"Ah",
 										"Zon",
 										"Nehn",
-										"Sige"]}],
+										"Sige"], desc: "Summoning: The act of moving something from one place to another without traveling through the space between. Summoning brings something that already exists from one place to another, it doesn't create anything." }],
 	["Nehn",		{x: 200, y: 190, stat: null, links: [
 										"Ah",
 										"Zon",
 										"Xi",
 										"Hel",
 										"Sige",
-										"Es"]}],
+										"Es"], desc: "Enchanting: Enchanting is, in this case the act of creating an active connection between the enchanted object and a sphere. This connection allows aspects of the sphere to manifest through the enchanted object. It is, in many ways, a lesser form of summoning, and carries with it many benefits and dangers, which are covered later." }],
 	["Hel",			{x: 125, y: 265, stat: null, links: [
 										"Zon",
 										"Nehn",
 										"Sige",
-										"Es"]}],
+										"Es"], desc: "Transmutation: The act of changing the material or properties of something without altering its form." }],
 	["Sige",		{x: 275, y: 265, stat: null, links: [
 										"Xi",
 										"Nehn",
 										"Hel",
-										"Es"]}],
+										"Es"], desc: "Alteration: The act of changing the form of something without altering its properties or material make up." }],
 	["Es",			{x: 200, y: 340, stat: null, links: [
 										"Nehn",
 										"Hel",
 										"Sige",
 										"Telazch",
 										"Yengenze",
-										"Akhmah"]}],
+										"Akhmah"], desc: "Manipulation: Moving or controlling something." }],
 	["Telazch",		{x: 125, y: 405, stat: "Endurance", links: [
 										"Es",
 										"Yengenze",
 										"Akhmah",
 										"Tzimtzvot",
-										"Noth"]}],
+										"Noth"], desc: "Biology: Life in all forms, poison, healing, disease, animals, plants, etc." }],
 	["Yengenze",	{x: 275, y: 405, stat: "Cunning", links: [
 										"Es",
 										"Telazch",
 										"Akhmah",
 										"Balarim",
-										"Konis"]}],
+										"Konis"], desc: "Mind: The mind, consciousness, and the spark of life. Perception, emotion, skills, thoughts, understanding, dreams, memories, etc." }],
 	["Tzimtzvot",	{x: 50, y: 480, stat: "Strength", links: [
 										"Telazch",
 										"Akhmah",
-										"Noth"]}],
+										"Noth"], desc: "Elemental forces: Natural and elemental forces, electricity, light, kinetic energy, radiation, fire, etc." }],
 	["Akhmah",		{x: 200, y: 480, stat: "Awareness", links: [
 										"Es",
 										"Telazch",
@@ -202,61 +202,61 @@ var spheres = [
 										"Balarim",
 										"Noth",
 										"Konis",
-										"Jal"]}],
+										"Jal"], desc: "Mundane materials: natural, non-organic substances like chemical elements, water, stone, etc. Not things made by mankind or other sentient beings or living things." }],
 	["Balarim",		{x: 350, y: 480, stat: "Knowledge", links: [
 										"Yengenze",
 										"Akhmah",
-										"Konis"]}],
+										"Konis"], desc: "Technology: Anything which is unnatural and created with purpose; writing, spoken language, technology, art, tools." }],
 	["Noth",		{x: 125, y: 550, stat: "Dexterity", links: [
 										"Telazch",
 										"Tzimtzvot",
 										"Akhmah",
 										"Konis",
-										"Jal"]}],
+										"Jal"], desc: "Physics: Variables that describe the universe; size, speed, weight, spacial location, time, etc." }],
 	["Konis",		{x: 275, y: 550, stat: "Speed", links: [
 										"Yengenze",
 										"Akhmah",
 										"Balarim",
 										"Noth",
-										"Jal"]}],
+										"Jal"], desc: "Weather and natural happenings: rain, snow, flooding, river flow, volcanoes, earthquakes, plate tectonics, oil deposit, tornados, etc." }],
 	["Jal",			{x: 200, y: 625, stat: null, links: [
 										"Akhmah",
 										"Noth",
 										"Konis",
 										"Gesh",
 										"Hal",
-										"Undyne"]}],
+										"Undyne"], desc: "Shielding: The act of preventing something from entering an area; excluding and repelling it." }],
 	["Gesh",		{x: 125, y: 690, stat: null, links: [
 										"Jal",
 										"Hal",
 										"Undyne",
-										"Non"]}],
+										"Non"], desc: "Binding: Binding is a very specific type of action and it only effects living or at least animate creatures. In essence, it is the act of forcing someone or something to something. For instance, you could bind someone to never tell anyone else a specific secret and, assuming they didn't have the will power to break it, the binding would prevent them from telling that secret. It can, however, be used to detect things as well, and be used as a sort of trip wire or trigger for certain events or circumstances. For instance, it could be used to detect someone's emotional state and cause some sort of reaction if it detects a particular emotion." }],
 	["Hal",			{x: 275, y: 690, stat: null, links: [
 										"Jal",
 										"Gesh",
 										"Undyne",
-										"Neth"]}],
+										"Neth"], desc: "Sealing: The act of preventing something from leaving a certain area; confining and trapping it." }],
 	["Undyne",		{x: 200, y: 765, stat: null, links: [
 										"Jal",
 										"Gesh",
 										"Hal",
 										"Non",
 										"Neth",
-										"En"]}],
+										"En"], desc: "Undo: The act of reverting something back to an older version of itself." }],
 	["Non",			{x: 125, y: 840, stat: null, links: [
 										"Gesh",
 										"Undyne", 
 										"Neth", 
-										"En"]}],
+										"En"], desc: "Dispelling: Because magic is everywhere and the connections to other spheres is not only what constitutes magic but also what allows things to have their current forms, dispelling is the act of severing connections to spheres outside the current one for a specific object or area. This is, in almost all cases, extremely destructive, as examination of what the Spheres of the Gray govern should tell you." }],
 	["Neth",		{x: 275, y: 840, stat: null, links: [
 										"Hal",
 										"Undyne",
 										"Non",
-										"En"]}],
+										"En"], desc: "Stasis: The act of keeping something in one particular state and not allowing it to change." }],
 	["En",			{x: 200, y: 910, stat: null, links: [
 										"Non",
 										"Neth",
-										"Undyne"]}]
+										"Undyne"], desc: "Destruction: This isn't destroying something like setting it on fire is destroying it or smashing it to pieces is destroying it. This is the act of erasing something from existence completely, including all pieces, and, in some cases, completely eradicating it from the memory and timeline of the world. This is the opposite of creation; Something into Nothing."}]
 ];
 var sphereMap = new Map(spheres);
 
@@ -404,6 +404,25 @@ function computeInsanityChances(nerveStatValue, advantageValue, pathLeft) {
 			averageNervePenalty: averageNervePenalty};
 }
 
+function displaySphereInfo(sphereName) {
+	var sphereText = sphereName;
+	var currSphere = sphereMap.get(sphereName);
+	if(currSphere!=null) {
+		if(currSphere.stat != null) {
+			sphereText = sphereText + "\nStat: "+ currSphere.stat;
+		}
+		if(currSphere.desc != null) {
+			sphereText = sphereText + "\n\nDesc: "+ currSphere.desc;
+		}
+	}
+	alert(sphereText);
+}
+
+var lastClickStart = 0;
+var pressed = false;
+var pressTimer = null;
+var longPressMillis = 1000;
+
 /* Do any initial drawing necessary, create the map and load a path if necessary */
 function drawValidateAndLoad() {
 	//Create the onClicks for the image
@@ -418,8 +437,28 @@ function drawValidateAndLoad() {
 		currArea.coords=currSphere.x+","+currSphere.y+","+sphereSize;
 		currArea.alt=sphereName;
 		currArea.href="javascript:void(0);";
-		currArea.onclick=function() {
-			addSphereToPath(this.id);
+		currArea.onmousedown=function() {
+			var id = this.id;
+			lastClickStart = new Date().getTime();
+			pressed = true;
+			console.log("Mouse Down [id="+id+", lastClickStart="+lastClickStart+", pressed="+pressed+"]");
+			pressTimer = window.setTimeout(function() {
+					var currTime = new Date().getTime();
+					var passedTime = currTime - lastClickStart;
+					console.log("Timeout Triggered [id="+id+", lastClickStart="+lastClickStart+", currTime="+currTime+", passedTime="+passedTime+", pressed="+pressed+"]");
+					displaySphereInfo(id);
+				}, longPressMillis);
+			return false;
+		};
+		currArea.onmouseup=function() {
+			clearTimeout(pressTimer);
+			var currTime = new Date().getTime();
+			var passedTime = currTime - lastClickStart;
+			pressed = false;
+			console.log("Mouse Up [id="+this.id+", currTime="+currTime+", passedTime="+passedTime+", pressed="+pressed+"]");
+			if(passedTime < longPressMillis) {
+				addSphereToPath(this.id);
+			}
 			return false;
 		};
 		map.appendChild(currArea);
@@ -513,9 +552,9 @@ function popLastSphere() {
 </script>
 </head>
 <body onload="drawValidateAndLoad()">
-	<noscript>This page requires JavaScript to work properly</noscript>
+	<noscript><span style="color: red; font-size: 300%;">This page requires JavaScript to work properly</span></noscript>
 	<div><input id="reset" name="reset" type="button" value="Reset" onclick="reset()"/></div>
-	<div>Click the spheres to select them. Clicking a sphere again reinforces it.</div>
+	<div>Click the spheres to select them. Clicking a sphere again reinforces it. Long click to display detailed information.</div>
 	<div>	
 		<img id="sphereImage" src="spheres.png" alt="Spheres" usemap="#sphereMap">
 
