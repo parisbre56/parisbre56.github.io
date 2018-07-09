@@ -356,22 +356,27 @@ function updatePage() {
 	//TODO redraw path
 }
 
+//Stores precomputed results to help speedup calculations
+var resultMap = new Map([]);
+
 function computeInsanityChances(nerveStatValue, advantageValue, pathLeft) {
-	var successOdds = nerveStatValue;
+	var resultKey = nerveStatValue+","+advantageValue+","+pathLeft;
+	var result = resultMap.get(resultKey);
+	if(result != null) {
+		return result;
+	}
+	/* Remove one from the stat to get the chances of success. 
+	 * This is roll under, which means that if we have
+	 * a nerve stat of 3 we can only succeed on a roll of 1 or 2 -> 2/20
+	 */
+	var successOdds = nerveStatValue - 1;
 	//A 1 is considered an automatic success regardless of penalties, so there's always at least 1/20 chance of success
-	if(successOdds < 2) {
+	if(successOdds < 1) {
 		successOdds = 1;
 	} 
 	//A 20 is considered an automatic failure regardless of penaltiesm so there's always at most 19/20 chances of success
 	else if(successOdds > 19) {
 		successOdds = 19;
-	}
-	/* Else, remove one from the stat to get the chances of success. 
-	 * This is roll under, which means that if we have
-	 * a nerve stat of 3 we can only succeed on a roll of 1 or 2 -> 2/20
-	 */
-	else {
-		successOdds = successOdds - 1;
 	}
 	var failOdds = 20 - successOdds;
 	
@@ -394,14 +399,30 @@ function computeInsanityChances(nerveStatValue, advantageValue, pathLeft) {
 		failOdds = totalOdds - successOdds;
 	}
 	var insanitySuccessCalculation = computeInsanityChances(nerveStatValue, advantageValue, pathLeft - 1);
-	var insanityFailureCalculation = computeInsanityChances(nerveStatValue-1, advantageValue, pathLeft - 1);
-	var insanitySuccessOdds = (successOdds * insanitySuccessCalculation.insanitySuccessOdds
+	var insanityFailureCalculation;
+	var insanitySuccessOdds;
+	var averageNervePenalty;
+	if(nerveStatValue <= 2) {
+		//Calculation is the same when nerve is at or below 2, because the player always has 1 chance of success
+		insanityFailureCalculation = insanitySuccessCalculation;
+		//Since calculation is the same, then odds are also the same 
+		//if (s+f)=totalOdds then (s*odds+f*odds)/totalOdds = (s+f)*odds/totalOdds = odds
+		insanitySuccessOdds = insanitySuccessCalculation.insanitySuccessOdds;
+		averageNervePenalty = (failOdds/totalOdds) + insanityFailureCalculation.averageNervePenalty;
+	} 
+	//Else, proceed with calculation normally
+	else {
+		insanityFailureCalculation = computeInsanityChances(nerveStatValue-1, advantageValue, pathLeft - 1);
+		insanitySuccessOdds = (successOdds * insanitySuccessCalculation.insanitySuccessOdds
 			+ failOdds * insanityFailureCalculation.insanitySuccessOdds)/totalOdds;
-	var averageNervePenalty = (failOdds/totalOdds) + 
+		averageNervePenalty = (failOdds/totalOdds) + 
 			((successOdds * insanitySuccessCalculation.averageNervePenalty
 			+ failOdds * insanityFailureCalculation.averageNervePenalty)/totalOdds);
-	return {insanitySuccessOdds: insanitySuccessOdds, 
+	}
+	result = {insanitySuccessOdds: insanitySuccessOdds, 
 			averageNervePenalty: averageNervePenalty};
+	resultMap.set(resultKey, result);
+	return result;
 }
 
 function displaySphereInfo(sphereName) {
