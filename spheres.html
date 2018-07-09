@@ -381,7 +381,7 @@ function computeInsanityChances(nerveStatValue, advantageValue, pathLeft) {
 	var failOdds = 20 - successOdds;
 	
 	//Recursion stop condition: reached the end of the path, so just return the odds of the final roll
-	if(pathLeft === 1) {
+	if(pathLeft <= 1) {
 		//The final roll doesn't get a reroll, so no need to take advantage/disadvantage into account
 		return {insanitySuccessOdds: successOdds/20, 
 				//No nerve penalty for the final roll. The effects of failing it should be penalty enough
@@ -398,20 +398,25 @@ function computeInsanityChances(nerveStatValue, advantageValue, pathLeft) {
 		successOdds = successOdds*successOdds;
 		failOdds = totalOdds - successOdds;
 	}
-	var insanitySuccessCalculation = computeInsanityChances(nerveStatValue, advantageValue, pathLeft - 1);
+	var insanitySuccessCalculation;
 	var insanityFailureCalculation;
 	var insanitySuccessOdds;
 	var averageNervePenalty;
 	if(nerveStatValue <= 2) {
 		//Calculation is the same when nerve is at or below 2, because the player always has 1 chance of success
-		insanityFailureCalculation = insanitySuccessCalculation;
+		//insanityFailureCalculation = insanitySuccessCalculation;
 		//Since calculation is the same, then odds are also the same 
 		//if (s+f)=totalOdds then (s*odds+f*odds)/totalOdds = (s+f)*odds/totalOdds = odds
-		insanitySuccessOdds = insanitySuccessCalculation.insanitySuccessOdds;
-		averageNervePenalty = (failOdds/totalOdds) + insanityFailureCalculation.averageNervePenalty;
+		//insanitySuccessOdds = insanitySuccessCalculation.insanitySuccessOdds;
+		//can be further simplified since we already know there's 1/20 chances of success
+		insanitySuccessOdds = 0.05;
+		//averageNervePenalty = (failOdds/totalOdds) + insanityFailureCalculation.averageNervePenalty;
+		//can be further simplified by eliminating the need for recursion, since odds remain the same
+		averageNervePenalty = (pathLeft-1)*(failOdds/totalOdds);
 	} 
 	//Else, proceed with calculation normally
 	else {
+		insanitySuccessCalculation = computeInsanityChances(nerveStatValue, advantageValue, pathLeft - 1);
 		insanityFailureCalculation = computeInsanityChances(nerveStatValue-1, advantageValue, pathLeft - 1);
 		insanitySuccessOdds = (successOdds * insanitySuccessCalculation.insanitySuccessOdds
 			+ failOdds * insanityFailureCalculation.insanitySuccessOdds)/totalOdds;
