@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 
-<meta name="description" content="A page used to calculate sucess odds of diving actions for the DIG 2.0 RP">
+<meta name="description" content="A page used to calculate success odds of diving actions for the DIG 2.0 RP">
 <meta name="keywords" content="Dig,RP,Diving,Spheres,Calculator">
 <meta name="author" content="Parisbre56">
 
@@ -289,7 +289,8 @@ function updatePage() {
 	var currPathString = currPathChoices.toString();
 	console.log("currPathChoices=["+currPathString+"]");
 	var nerveStatValue = Number(document.getElementById("nerveStat").value);
-	var shareString = currUrl+"?path="+currPathString+"&nerve="+nerveStatValue;
+	var sacrificeRecoupValue = Number(document.getElementById("sacrificeRecoup").value);
+	var shareString = currUrl+"?path="+currPathString+"&nerve="+nerveStatValue+"&sacrificeRecoup="+sacrificeRecoupValue;
 	if(document.getElementById("advantageState").checked) {
 		shareString = shareString + "&state=adv";
 	} else if (document.getElementById("disadvantageState").checked) {
@@ -347,41 +348,54 @@ function updatePage() {
 	} else if (document.getElementById("disadvantageState").checked) {
 		advantageValue = -1;
 	}
-	console.log("computing odds of success [nerveStatValue="+nerveStatValue+", advantageValue="+advantageValue+", rolls="+selectedPath.length+"]");
-	var insanityCalculationValue = computeInsanityChances(nerveStatValue,advantageValue,selectedPath.length);
-	document.getElementById("insanitySuccessOdds").innerHTML = insanityCalculationValue.insanitySuccessOdds*100 + "%";
-	document.getElementById("avgNervePenalty").innerHTML = insanityCalculationValue.averageNervePenalty;
+	console.log("computing odds of success [nerveStatValue="+nerveStatValue+", advantageValue="+advantageValue+", rolls="+selectedPath.length+", sacrificeRecoupValue="+sacrificeRecoupValue+"]");
+	var insanityCalculationValue = computeInsanityChances(nerveStatValue, advantageValue, selectedPath.length, 0, sacrificeRecoupValue);
+	document.getElementById("insanitySuccessOdds").innerHTML = (insanityCalculationValue.insanitySuccessOdds*100).toFixed(2) + "%";
+	var averageNervePenaltyString = insanityCalculationValue.averageNervePenalty.toFixed(2);
+	if(sacrificeRecoupValue > 0) {
+		averageNervePenaltyString = averageNervePenaltyString + " (";
+		averageNervePenaltyString = averageNervePenaltyString + Math.max(0, insanityCalculationValue.averageNervePenalty - sacrificeRecoupValue).toFixed(2);
+		averageNervePenaltyString = averageNervePenaltyString + " with sacrifice recoup)";
+	}
+	document.getElementById("avgNervePenalty").innerHTML = averageNervePenaltyString;
+	var maxNervePenaltyString = (selectedPath.length - 1).toFixed(2);
+	if(sacrificeRecoupValue > 0) {
+		maxNervePenaltyString = maxNervePenaltyString + " (";
+		maxNervePenaltyString = maxNervePenaltyString + Math.max(0, selectedPath.length - 1 - sacrificeRecoupValue).toFixed(2);
+		maxNervePenaltyString = maxNervePenaltyString + " with sacrifice recoup)";
+	}
+	document.getElementById("maxNervePenalty").innerHTML = maxNervePenaltyString;
 	//TODO set calculation tables
 	
 	//TODO redraw path
 }
 
-//Stores precomputed results to help speedup calculations
-var resultMap = new Map([]);
-
-function computeInsanityChances(nerveStatValue, advantageValue, pathLeft) {
-	var resultKey = nerveStatValue+","+advantageValue+","+pathLeft;
-	var result = resultMap.get(resultKey);
-	if(result != null) {
-		return result;
+function computeInsanityChances(nerveStatValue, advantageValue, pathLeft, fails, sacrificeRecoup) {
+	var successOdds = nerveStatValue;
+	//Recursion stop condition: reached the end of the path, so we need to reduce success odds by the number of fails so far
+	if(pathLeft === 1 && fails > sacrificeRecoup) {
+		successOdds = successOdds + sacrificeRecoup - fails;
 	}
-	/* Remove one from the stat to get the chances of success. 
-	 * This is roll under, which means that if we have
-	 * a nerve stat of 3 we can only succeed on a roll of 1 or 2 -> 2/20
-	 */
-	var successOdds = nerveStatValue - 1;
+	
 	//A 1 is considered an automatic success regardless of penalties, so there's always at least 1/20 chance of success
-	if(successOdds < 1) {
+	if(successOdds < 2) {
 		successOdds = 1;
 	} 
 	//A 20 is considered an automatic failure regardless of penaltiesm so there's always at most 19/20 chances of success
 	else if(successOdds > 19) {
 		successOdds = 19;
 	}
+	/* Else, remove one from the stat to get the chances of success. 
+	 * This is roll under, which means that if we have
+	 * a nerve stat of 3 we can only succeed on a roll of 1 or 2 -> 2/20
+	 */
+	else {
+		successOdds = successOdds - 1;
+	}
 	var failOdds = 20 - successOdds;
 	
 	//Recursion stop condition: reached the end of the path, so just return the odds of the final roll
-	if(pathLeft <= 1) {
+	if(pathLeft === 1) {
 		//The final roll doesn't get a reroll, so no need to take advantage/disadvantage into account
 		return {insanitySuccessOdds: successOdds/20, 
 				//No nerve penalty for the final roll. The effects of failing it should be penalty enough
@@ -398,36 +412,63 @@ function computeInsanityChances(nerveStatValue, advantageValue, pathLeft) {
 		successOdds = successOdds*successOdds;
 		failOdds = totalOdds - successOdds;
 	}
-	var insanitySuccessCalculation;
-	var insanityFailureCalculation;
-	var insanitySuccessOdds;
-	var averageNervePenalty;
-	if(nerveStatValue <= 2) {
-		//Calculation is the same when nerve is at or below 2, because the player always has 1 chance of success
-		//insanityFailureCalculation = insanitySuccessCalculation;
-		//Since calculation is the same, then odds are also the same 
-		//if (s+f)=totalOdds then (s*odds+f*odds)/totalOdds = (s+f)*odds/totalOdds = odds
-		//insanitySuccessOdds = insanitySuccessCalculation.insanitySuccessOdds;
-		//can be further simplified since we already know there's 1/20 chances of success
-		insanitySuccessOdds = 0.05;
-		//averageNervePenalty = (failOdds/totalOdds) + insanityFailureCalculation.averageNervePenalty;
-		//can be further simplified by eliminating the need for recursion, since odds remain the same
-		averageNervePenalty = (pathLeft-1)*(failOdds/totalOdds);
-	} 
-	//Else, proceed with calculation normally
-	else {
-		insanitySuccessCalculation = computeInsanityChances(nerveStatValue, advantageValue, pathLeft - 1);
-		insanityFailureCalculation = computeInsanityChances(nerveStatValue-1, advantageValue, pathLeft - 1);
-		insanitySuccessOdds = (successOdds * insanitySuccessCalculation.insanitySuccessOdds
+	var insanitySuccessCalculation = computeInsanityChances(nerveStatValue, advantageValue, pathLeft - 1, fails, sacrificeRecoup);
+	var insanityFailureCalculation = computeInsanityChances(nerveStatValue, advantageValue, pathLeft - 1, fails+1, sacrificeRecoup);
+	var insanitySuccessOdds = (successOdds * insanitySuccessCalculation.insanitySuccessOdds
 			+ failOdds * insanityFailureCalculation.insanitySuccessOdds)/totalOdds;
-		averageNervePenalty = (failOdds/totalOdds) + 
+	var averageNervePenalty = (failOdds/totalOdds) + 
 			((successOdds * insanitySuccessCalculation.averageNervePenalty
 			+ failOdds * insanityFailureCalculation.averageNervePenalty)/totalOdds);
-	}
-	result = {insanitySuccessOdds: insanitySuccessOdds, 
+	return {insanitySuccessOdds: insanitySuccessOdds, 
 			averageNervePenalty: averageNervePenalty};
-	resultMap.set(resultKey, result);
-	return result;
+}
+
+function computeInsanityChancesOld(nerveStatValue, advantageValue, pathLeft) {
+	var successOdds = nerveStatValue;
+	//A 1 is considered an automatic success regardless of penalties, so there's always at least 1/20 chance of success
+	if(successOdds < 2) {
+		successOdds = 1;
+	} 
+	//A 20 is considered an automatic failure regardless of penaltiesm so there's always at most 19/20 chances of success
+	else if(successOdds > 19) {
+		successOdds = 19;
+	}
+	/* Else, remove one from the stat to get the chances of success. 
+	 * This is roll under, which means that if we have
+	 * a nerve stat of 3 we can only succeed on a roll of 1 or 2 -> 2/20
+	 */
+	else {
+		successOdds = successOdds - 1;
+	}
+	var failOdds = 20 - successOdds;
+	
+	//Recursion stop condition: reached the end of the path, so just return the odds of the final roll
+	if(pathLeft === 1) {
+		//The final roll doesn't get a reroll, so no need to take advantage/disadvantage into account
+		return {insanitySuccessOdds: successOdds/20, 
+				//No nerve penalty for the final roll. The effects of failing it should be penalty enough
+				averageNervePenalty: 0}
+	}
+	
+	var totalOdds = 20;
+	if(advantageValue>0) { //At advantage
+		totalOdds = 400; //20*20
+		failOdds = failOdds*failOdds;
+		successOdds = totalOdds - failOdds;
+	} else if(advantageValue<0) { //At disadvantage
+		totalOdds = 400; //20*20
+		successOdds = successOdds*successOdds;
+		failOdds = totalOdds - successOdds;
+	}
+	var insanitySuccessCalculation = computeInsanityChancesOld(nerveStatValue, advantageValue, pathLeft - 1);
+	var insanityFailureCalculation = computeInsanityChancesOld(nerveStatValue-1, advantageValue, pathLeft - 1);
+	var insanitySuccessOdds = (successOdds * insanitySuccessCalculation.insanitySuccessOdds
+			+ failOdds * insanityFailureCalculation.insanitySuccessOdds)/totalOdds;
+	var averageNervePenalty = (failOdds/totalOdds) + 
+			((successOdds * insanitySuccessCalculation.averageNervePenalty
+			+ failOdds * insanityFailureCalculation.averageNervePenalty)/totalOdds);
+	return {insanitySuccessOdds: insanitySuccessOdds, 
+			averageNervePenalty: averageNervePenalty};
 }
 
 function displaySphereInfo(sphereName) {
@@ -500,7 +541,7 @@ function drawValidateAndLoad() {
 			return false;
 		};
 		currArea.onmousedown = downFun;
-		currArea.ontouchstart = downFun;
+		//currArea.ontouchstart = downFun;
 		var upFun=function() {
 			clearTimeout(pressTimer);
 			var currTime = new Date().getTime();
@@ -513,7 +554,7 @@ function drawValidateAndLoad() {
 			return false;
 		};
 		currArea.onmouseup = upFun;
-		currArea.ontouchend = upFun;
+		//currArea.ontouchend = upFun;
 		var cancelFun=function() {
 			clearTimeout(pressTimer);
 			var currTime = new Date().getTime();
@@ -522,8 +563,8 @@ function drawValidateAndLoad() {
 			console.log("Mouse Up [id="+this.id+", currTime="+currTime+", passedTime="+passedTime+", pressed="+pressed+"]");
 			return false;
 		};
-		currArea.ontouchmove=cancelFun;
-		currArea.ontouchcancel=cancelFun;
+		//currArea.ontouchmove=cancelFun;
+		//currArea.ontouchcancel=cancelFun;
 		currArea.oncontextmenu=function(e) {
 			e = e || window.event;
 			if(e != null && typeof e.preventDefault === 'function') {
@@ -566,6 +607,18 @@ function drawValidateAndLoad() {
 		document.getElementById("nerveStat").value = loadNerveValue;
 	} else {
 		document.getElementById("nerveStat").value = 10;
+	}
+	
+	//Load the sacrificeRecoup value
+	var loadSacrificeRecoupValue = getParameterByName("sacrificeRecoup");
+	console.log("loadSacrificeRecoupValue="+loadSacrificeRecoupValue);
+	if(loadSacrificeRecoupValue != null) {
+		loadSacrificeRecoupValue = Number(loadSacrificeRecoupValue)
+		loadSacrificeRecoupValue = Math.floor(loadSacrificeRecoupValue)
+		console.log("finalLoadSacrificeRecoupValue="+loadSacrificeRecoupValue);
+		document.getElementById("sacrificeRecoup").value = loadSacrificeRecoupValue;
+	} else {
+		document.getElementById("sacrificeRecoup").value = 0;
 	}
 	
 	//Load the state value
@@ -642,13 +695,15 @@ function popLastSphere() {
 			<div><b>Current Path:</b> <span id="currentPathString"></span> <input id="pop" name="pop" type="button" value="Remove Last Sphere" onclick="popLastSphere()"/> </div>
 			<div><b>Nerve Rolls:</b> <span id="nerveRollsString"></span></div>
 			<div><b>Nerve Stat:</b> <input id="nerveStat" name="nerveStat" type="number" step="1" required="true" oninput="updatePage()" /></div>
+			<div><b>Sacrifice Recoup:</b> <input id="sacrificeRecoup" name="sacrificeRecoup" type="number" step="1" min="0" required="true" oninput="updatePage()" /></div>
 			<div><b>State:</b> 
-				<input id="advantageState" name="state" type="radio" required="true" oninput="updatePage()">Advantage</input>
-				<input id="normalState" name="state" type="radio" required="true" oninput="updatePage()" checked>Normal</input>
-				<input id="disadvantageState" name="state" type="radio" required="true" oninput="updatePage()">Disadvantage</input>
+				<input id="advantageState" name="state" type="radio" required="true" oninput="updatePage()" /><label for="advantageState">Advantage</label>
+				<input id="normalState" name="state" type="radio" required="true" oninput="updatePage()" checked /><label for="normalState">Normal</label>
+				<input id="disadvantageState" name="state" type="radio" required="true" oninput="updatePage()" /><label for="disadvantageState">Disadvantage</label>
 			</div>
 			<div><b>Insanity Roll Success Odds:</b> <span id="insanitySuccessOdds"></span></div>
 			<div><b>Average Nerve Penalty:</b> <span id="avgNervePenalty"></span></div>
+			<div><b>Maximum Nerve Penalty:</b> <span id="maxNervePenalty"></span></div>
 			<div><b>Reinforcements:</b> <ul id="reinforcementList"></ul></div>
 		</form>
 		<div><b>Share Link:</b> <a id="shareString" target="_blank" href=""></a></div>
