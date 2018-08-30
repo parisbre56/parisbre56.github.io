@@ -262,6 +262,18 @@ var sphereMap = new Map(spheres);
 
 var selectedPath = ["Akhmah"];
 
+var f = [];
+function factorial (n) {
+  if (n == 0 || n == 1)
+    return 1;
+  if (f[n] > 0)
+    return f[n];
+  return f[n] = factorial(n-1) * n;
+}
+var cache = 20;
+//due to memoization following line will cache first 100 elements
+factorial(cache);
+
 /* Reinitialize everything */
 function reset() {
 	selectedPath = ["Akhmah"];
@@ -365,7 +377,77 @@ function updatePage() {
 		maxNervePenaltyString = maxNervePenaltyString + " with sacrifice recoup)";
 	}
 	document.getElementById("maxNervePenalty").innerHTML = maxNervePenaltyString;
-	//TODO set calculation tables
+	
+	//Set calculation tables
+	var probTable = document.getElementById("probTable");
+	probTable.innerHTML = "<tr><th>Number of failures</th><th>Paths to this many failures</th><th>Chance of single path with this many failures</th><th>Chance of this many failures</th><th>Chance of success</th><th>Chance of getting this many failures and succeeding</th></tr>";
+	var x = 0;
+	var y = selectedPath.length - 1;
+	var pathsToSuccessSingle = Math.min(19,Math.max(1,nerveStatValue-1));
+	var chanceOfSuccessSingle = pathsToSuccessSingle/20;
+	var chanceOfFailSingle = (20-pathsToSuccessSingle)/20;
+	var totalSuccess = 0;
+	//TODO make this work for advantage
+	//TODO add button to hide table, hide by default
+	for(x = 0; x <= y; x++) {
+		var tr = document.createElement("tr");
+		var td = document.createElement("th");
+		td.innerHTML = x;
+		tr.appendChild(td);
+		
+		//number of paths with x failures: (y!/(x!(y-x)!))
+		var pathsWithXFails = factorial(y)/(factorial(x)*factorial(y-x)); //TODO memoization ?
+		td = document.createElement("td");
+		td.innerHTML = pathsWithXFails;
+		tr.appendChild(td);
+		
+		//chance of getting a specific path: (1-max(1,skill-1)/20)^x * (max(1,skill-1)/20)^(y-x)
+		var chanceOfPath = Math.pow(chanceOfFailSingle,x) * Math.pow(chanceOfSuccessSingle,y-x); //TODO memoization ?
+		td = document.createElement("td");
+		td.innerHTML = (chanceOfPath*100).toFixed(2) + "%";
+		tr.appendChild(td);
+		
+		//chance of getting a specific number of failures: (y!/(x!(y-x)!))*((1-max(1,skill-1)/20)^x * (max(1,skill-1)/20)^(y-x))
+		var chanceOfXFails = pathsWithXFails * chanceOfPath;
+		td = document.createElement("td");
+		td.innerHTML = (chanceOfXFails*100).toFixed(2) + "%";
+		tr.appendChild(td);
+		
+		//chance of succeeding with a certain number of failures: (max(1,skill-1-max(0,x-recoup))/20)
+		var chanceOfXFailsSuccess = Math.min(19,Math.max(1,nerveStatValue-1-Math.max(0,x-sacrificeRecoupValue)))/20;
+		td = document.createElement("td");
+		td.innerHTML = (chanceOfXFailsSuccess*100).toFixed(2) + "%";
+		tr.appendChild(td);
+		
+		//chance of getting a certain number of failures and succeeding: (y!/(x!(y-x)!))*((1-max(1,skill-1)/20)^x * (max(1,skill-1)/20)^(y-x))*(max(1,skill-1-max(0,x-recoup))/20)
+		var chanceOfXFailsAndSuccess = chanceOfXFails * chanceOfXFailsSuccess;
+		td = document.createElement("td");
+		td.innerHTML = (chanceOfXFailsAndSuccess*100).toFixed(2) + "%";
+		tr.appendChild(td);
+		
+		totalSuccess += chanceOfXFailsAndSuccess;
+		probTable.appendChild(tr);
+	}
+	var totalTr = document.createElement("tr");
+	var totalTd = document.createElement("th");
+	totalTd.innerHTML = "TOTAL";
+	totalTr.appendChild(totalTd);
+	var totalTd = document.createElement("td");
+	totalTd.innerHTML = "";
+	totalTr.appendChild(totalTd);
+	var totalTd = document.createElement("td");
+	totalTd.innerHTML = "";
+	totalTr.appendChild(totalTd);
+	var totalTd = document.createElement("td");
+	totalTd.innerHTML = "";
+	totalTr.appendChild(totalTd);
+	var totalTd = document.createElement("td");
+	totalTd.innerHTML = "";
+	totalTr.appendChild(totalTd);
+	var totalTd = document.createElement("td");
+	totalTd.innerHTML = (totalSuccess*100).toFixed(2) + "%";
+	totalTr.appendChild(totalTd);
+	probTable.appendChild(totalTr);
 	
 	//TODO redraw path
 }
@@ -707,6 +789,10 @@ function popLastSphere() {
 			<div><b>Reinforcements:</b> <ul id="reinforcementList"></ul></div>
 		</form>
 		<div><b>Share Link:</b> <a id="shareString" target="_blank" href=""></a></div>
+	</div>
+	<div>
+		<table id="probTable">
+		</table>
 	</div>
 	<div class="pageInfo">Page hosted on github, find the source code here: <a target="_blank" href="https://github.com/parisbre56/parisbre56.github.io/blob/master/spheres.html">https://github.com/parisbre56/parisbre56.github.io/blob/master/spheres.html</a></div>
 </body>
