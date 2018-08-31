@@ -595,15 +595,19 @@ function updatePage() {
 	totalTr.appendChild(totalTd);
 	var totalTd = document.createElement("th");
 	totalTd.innerHTML = (totalSuccess*100).toFixed(10) + "%";
+	totalTd.style.backgroundColor = colorValue(totalSuccess,0.05,0.95);
 	totalTr.appendChild(totalTd);
 	var totalTd = document.createElement("th");
 	totalTd.innerHTML = (totalSuccessWithoutRecoup*100).toFixed(10) + "%";
+	totalTd.style.backgroundColor = colorValue(totalSuccessWithoutRecoup,0.05,0.95);
 	totalTr.appendChild(totalTd);
 	var totalTd = document.createElement("th");
 	totalTd.innerHTML = totalNervePenalty.toFixed(10);
+	totalTd.style.backgroundColor = colorValue(totalNervePenalty,0,y);
 	totalTr.appendChild(totalTd);
 	var totalTd = document.createElement("th");
 	totalTd.innerHTML = totalNervePenaltyWithoutRecoup.toFixed(10);
+	totalTd.style.backgroundColor = colorValue(totalNervePenaltyWithoutRecoup,0,y);
 	totalTr.appendChild(totalTd);
 	probTable.appendChild(totalTr);
 	
