@@ -270,9 +270,8 @@ function factorial (n) {
     return f[n];
   return f[n] = factorial(n-1) * n;
 }
-var cache = 20;
-//due to memoization following line will cache first 100 elements
-factorial(cache);
+//due to memoization following line will cache first 20 elements
+factorial(20);
 
 /* Reinitialize everything */
 function reset() {
@@ -361,7 +360,7 @@ function updatePage() {
 		advantageValue = -1;
 	}
 	console.log("computing odds of success [nerveStatValue="+nerveStatValue+", advantageValue="+advantageValue+", rolls="+selectedPath.length+", sacrificeRecoupValue="+sacrificeRecoupValue+"]");
-	var insanityCalculationValue = computeInsanityChances(nerveStatValue, advantageValue, selectedPath.length, 0, sacrificeRecoupValue);
+	/*var insanityCalculationValue = computeInsanityChances(nerveStatValue, advantageValue, selectedPath.length, 0, sacrificeRecoupValue);
 	document.getElementById("insanitySuccessOdds").innerHTML = (insanityCalculationValue.insanitySuccessOdds*100).toFixed(2) + "%";
 	var averageNervePenaltyString = insanityCalculationValue.averageNervePenalty.toFixed(2);
 	if(sacrificeRecoupValue > 0) {
@@ -377,18 +376,43 @@ function updatePage() {
 		maxNervePenaltyString = maxNervePenaltyString + " with sacrifice recoup)";
 	}
 	document.getElementById("maxNervePenalty").innerHTML = maxNervePenaltyString;
+	*/
 	
 	//Set calculation tables
 	var probTable = document.getElementById("probTable");
-	probTable.innerHTML = "<tr><th>Number of failures</th><th>Paths to this many failures</th><th>Chance of single path with this many failures</th><th>Chance of this many failures</th><th>Chance of success</th><th>Chance of getting this many failures and succeeding</th></tr>";
+	probTable.innerHTML = "<tr><th>Number of failures</th><th>Paths to this many failures</th><th>Chance of single path with this many failures</th><th>Chance of this many failures</th><th>Chance of success</th><th>Chance of success without recoup</th><th>Chance of getting this many failures and succeeding</th><th>Chance of getting this many failures and succeeding without recoup</th><th>Weighted nerve penalty</th><th>Weighted nerve penalty without recoup</th></tr>";
 	var x = 0;
 	var y = selectedPath.length - 1;
 	var pathsToSuccessSingle = Math.min(19,Math.max(1,nerveStatValue-1));
-	var chanceOfSuccessSingle = pathsToSuccessSingle/20;
-	var chanceOfFailSingle = (20-pathsToSuccessSingle)/20;
+	var chanceOfSuccessSingle;
+	var chanceOfFailSingle;
+	if(advantageValue > 0) {
+		var temp = 20-pathsToSuccessSingle;
+		temp = temp * temp;
+		chanceOfSuccessSingle = (400-temp)/400;
+		chanceOfFailSingle = temp/400;
+	} else if (advantageValue < 0) {
+		var temp = pathsToSuccessSingle*pathsToSuccessSingle;
+		chanceOfSuccessSingle = temp/400;
+		chanceOfFailSingle = (400-temp)/400;
+	} else {
+		chanceOfSuccessSingle = pathsToSuccessSingle/20;
+		chanceOfFailSingle = (20-pathsToSuccessSingle)/20;
+	}
 	var totalSuccess = 0;
-	//TODO make this work for advantage
-	//TODO add button to hide table, hide by default
+	var totalSuccessWithoutRecoup = 0;
+	var totalNervePenalty = 0;
+	var totalNervePenaltyWithoutRecoup = 0;
+	var maxFailChance = 0;
+	for(x = 0; x <= y; x++) {
+		var pathsWithXFails = factorial(y)/(factorial(x)*factorial(y-x));
+		var chanceOfPath = Math.pow(chanceOfFailSingle,x) * Math.pow(chanceOfSuccessSingle,y-x);
+		var chanceOfXFails = pathsWithXFails * chanceOfPath;
+		if(chanceOfXFails > maxFailChance) {
+			maxFailChance = chanceOfXFails;
+		}
+	}
+	//TODO add button to hide table? hide by default?
 	for(x = 0; x <= y; x++) {
 		var tr = document.createElement("tr");
 		var td = document.createElement("th");
@@ -396,36 +420,60 @@ function updatePage() {
 		tr.appendChild(td);
 		
 		//number of paths with x failures: (y!/(x!(y-x)!))
-		var pathsWithXFails = factorial(y)/(factorial(x)*factorial(y-x)); //TODO memoization ?
+		var pathsWithXFails = factorial(y)/(factorial(x)*factorial(y-x));
 		td = document.createElement("td");
 		td.innerHTML = pathsWithXFails;
 		tr.appendChild(td);
 		
-		//chance of getting a specific path: (1-max(1,skill-1)/20)^x * (max(1,skill-1)/20)^(y-x)
-		var chanceOfPath = Math.pow(chanceOfFailSingle,x) * Math.pow(chanceOfSuccessSingle,y-x); //TODO memoization ?
+		//chance of getting a specific path (no advantage/disadvantage): (1-max(1,skill-1)/20)^x * (max(1,skill-1)/20)^(y-x)
+		var chanceOfPath = Math.pow(chanceOfFailSingle,x) * Math.pow(chanceOfSuccessSingle,y-x);
 		td = document.createElement("td");
-		td.innerHTML = (chanceOfPath*100).toFixed(2) + "%";
+		td.innerHTML = (chanceOfPath*100).toFixed(10) + "%";
 		tr.appendChild(td);
 		
 		//chance of getting a specific number of failures: (y!/(x!(y-x)!))*((1-max(1,skill-1)/20)^x * (max(1,skill-1)/20)^(y-x))
 		var chanceOfXFails = pathsWithXFails * chanceOfPath;
 		td = document.createElement("td");
-		td.innerHTML = (chanceOfXFails*100).toFixed(2) + "%";
+		td.innerHTML = (chanceOfXFails*100).toFixed(10) + "%";
+		td.style.backgroundColor = "rgb(" + ((chanceOfXFails/maxFailChance) * 255) + ", " + ((1 - (chanceOfXFails/maxFailChance)) * 255) + ", 0)";
 		tr.appendChild(td);
 		
 		//chance of succeeding with a certain number of failures: (max(1,skill-1-max(0,x-recoup))/20)
 		var chanceOfXFailsSuccess = Math.min(19,Math.max(1,nerveStatValue-1-Math.max(0,x-sacrificeRecoupValue)))/20;
 		td = document.createElement("td");
-		td.innerHTML = (chanceOfXFailsSuccess*100).toFixed(2) + "%";
+		td.innerHTML = (chanceOfXFailsSuccess*100).toFixed(10) + "%";
+		tr.appendChild(td);
+		
+		var chanceOfXFailsSuccessWithoutRecoup = Math.min(19,Math.max(1,nerveStatValue-1-x))/20;
+		td = document.createElement("td");
+		td.innerHTML = (chanceOfXFailsSuccessWithoutRecoup*100).toFixed(10) + "%";
 		tr.appendChild(td);
 		
 		//chance of getting a certain number of failures and succeeding: (y!/(x!(y-x)!))*((1-max(1,skill-1)/20)^x * (max(1,skill-1)/20)^(y-x))*(max(1,skill-1-max(0,x-recoup))/20)
 		var chanceOfXFailsAndSuccess = chanceOfXFails * chanceOfXFailsSuccess;
 		td = document.createElement("td");
-		td.innerHTML = (chanceOfXFailsAndSuccess*100).toFixed(2) + "%";
+		td.innerHTML = (chanceOfXFailsAndSuccess*100).toFixed(10) + "%";
+		tr.appendChild(td);
+		
+		var chanceOfXFailsAndSuccessWithoutRecoup = chanceOfXFails * chanceOfXFailsSuccessWithoutRecoup;
+		td = document.createElement("td");
+		td.innerHTML = (chanceOfXFailsAndSuccessWithoutRecoup*100).toFixed(10) + "%";
+		tr.appendChild(td);
+		
+		var weightedNervePenalty = Math.max(0,x - sacrificeRecoupValue)*chanceOfXFails;
+		td = document.createElement("td");
+		td.innerHTML = (weightedNervePenalty).toFixed(10);
+		tr.appendChild(td);
+		
+		var weightedNervePenaltyWithoutRecoup = x*chanceOfXFails;
+		td = document.createElement("td");
+		td.innerHTML = (weightedNervePenaltyWithoutRecoup).toFixed(10);
 		tr.appendChild(td);
 		
 		totalSuccess += chanceOfXFailsAndSuccess;
+		totalSuccessWithoutRecoup += chanceOfXFailsAndSuccessWithoutRecoup;
+		totalNervePenalty += weightedNervePenalty;
+		totalNervePenaltyWithoutRecoup += weightedNervePenaltyWithoutRecoup;
 		probTable.appendChild(tr);
 	}
 	var totalTr = document.createElement("tr");
@@ -433,21 +481,56 @@ function updatePage() {
 	totalTd.innerHTML = "TOTAL";
 	totalTr.appendChild(totalTd);
 	var totalTd = document.createElement("td");
-	totalTd.innerHTML = "";
+	//all possible paths: 2^y
+	totalTd.innerHTML = Math.pow(2,y);
 	totalTr.appendChild(totalTd);
 	var totalTd = document.createElement("td");
-	totalTd.innerHTML = "";
+	totalTd.innerHTML = "-";
 	totalTr.appendChild(totalTd);
 	var totalTd = document.createElement("td");
-	totalTd.innerHTML = "";
+	totalTd.innerHTML = "-";
 	totalTr.appendChild(totalTd);
 	var totalTd = document.createElement("td");
-	totalTd.innerHTML = "";
+	totalTd.innerHTML = "-";
 	totalTr.appendChild(totalTd);
 	var totalTd = document.createElement("td");
-	totalTd.innerHTML = (totalSuccess*100).toFixed(2) + "%";
+	totalTd.innerHTML = "-";
+	totalTr.appendChild(totalTd);
+	var totalTd = document.createElement("td");
+	totalTd.innerHTML = (totalSuccess*100).toFixed(10) + "%";
+	totalTr.appendChild(totalTd);
+	var totalTd = document.createElement("td");
+	totalTd.innerHTML = (totalSuccessWithoutRecoup*100).toFixed(10) + "%";
+	totalTr.appendChild(totalTd);
+	var totalTd = document.createElement("td");
+	totalTd.innerHTML = totalNervePenalty.toFixed(10);
+	totalTr.appendChild(totalTd);
+	var totalTd = document.createElement("td");
+	totalTd.innerHTML = totalNervePenaltyWithoutRecoup.toFixed(10);
 	totalTr.appendChild(totalTd);
 	probTable.appendChild(totalTr);
+	
+	var insanitySuccessOddsString = (totalSuccess*100).toFixed(2) + "%";
+	if(sacrificeRecoupValue > 0) {
+		insanitySuccessOddsString = insanitySuccessOddsString + " (";
+		insanitySuccessOddsString = insanitySuccessOddsString + (totalSuccessWithoutRecoup*100).toFixed(2);
+		insanitySuccessOddsString = insanitySuccessOddsString + "% without sacrifice recoup)";
+	}
+	document.getElementById("insanitySuccessOdds").innerHTML = insanitySuccessOddsString;
+	var averageNervePenaltyString = totalNervePenalty.toFixed(2);
+	if(sacrificeRecoupValue > 0) {
+		averageNervePenaltyString = averageNervePenaltyString + " (";
+		averageNervePenaltyString = averageNervePenaltyString + totalNervePenaltyWithoutRecoup.toFixed(2);
+		averageNervePenaltyString = averageNervePenaltyString + " without sacrifice recoup)";
+	}
+	document.getElementById("avgNervePenalty").innerHTML = averageNervePenaltyString;
+	var maxNervePenaltyString = Math.max(0, selectedPath.length - 1 - sacrificeRecoupValue).toFixed(2);
+	if(sacrificeRecoupValue > 0) {
+		maxNervePenaltyString = maxNervePenaltyString + " (";
+		maxNervePenaltyString = maxNervePenaltyString + (selectedPath.length - 1).toFixed(2);
+		maxNervePenaltyString = maxNervePenaltyString + " without sacrifice recoup)";
+	}
+	document.getElementById("maxNervePenalty").innerHTML = maxNervePenaltyString;
 	
 	//TODO redraw path
 }
