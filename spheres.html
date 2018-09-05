@@ -304,6 +304,84 @@ function colorValue(curr, min, max) {
 	}
 }
 
+function getNormalizedNerve(nerveStatValue) {
+	return Math.min(19,Math.max(1,nerveStatValue-1));
+}
+
+function getChanceSingle(nerveStatValue, advantageValue) {
+	var pathsToSuccessSingle = getNormalizedNerve(nerveStatValue);
+	var chanceOfSuccessSingle;
+	if(advantageValue > 0) {
+		var temp = 20-pathsToSuccessSingle;
+		temp = temp * temp;
+		chanceOfSuccessSingle = (400-temp)/400;
+		chanceOfFailSingle = temp/400;
+	} else if (advantageValue < 0) {
+		var temp = pathsToSuccessSingle*pathsToSuccessSingle;
+		chanceOfSuccessSingle = temp/400;
+		chanceOfFailSingle = (400-temp)/400;
+	} else {
+		chanceOfSuccessSingle = pathsToSuccessSingle/20;
+		chanceOfFailSingle = (20-pathsToSuccessSingle)/20;
+	}
+	return {success: chanceOfSuccessSingle,
+			failure: chanceOfFailSingle};
+}
+
+//We get the chances by recursively getting all the possible way to spread successes between failures
+var successPathChancesCache = new Map();
+function getSuccessPathChances(nerveStatValue, advantageValue, toSpread, spreadAmongst) {
+	var cacheKey = nerveStatValue + "|" + advantageValue + "|" + toSpread + "|" + spreadAmongst;
+	var result = successPathChancesCache.get(cacheKey);
+	if(result != null) {
+		return result;
+	}
+	
+	if(spreadAmongst == 1) {
+		result = Math.pow(getChanceSingle(nerveStatValue, advantageValue).success, toSpread);
+		
+		successPathChancesCache.set(cacheKey, result);
+		return result;
+	}
+	
+	//Start result with value for i == 0 (small optimization)
+	result = getSuccessPathChances(nerveStatValue-1, advantageValue, toSpread, spreadAmongst - 1);;
+	var i;
+	for(i = 1; i <= toSpread; ++i) {
+		result = result + Math.pow(getChanceSingle(nerveStatValue, advantageValue).success, i)*getSuccessPathChances(nerveStatValue-1, advantageValue, toSpread - i, spreadAmongst - 1);
+	}
+	
+	successPathChancesCache.set(cacheKey, result);
+	return result;
+}
+
+var chanceOfFailCache = new Map();
+function getChanceOfFails(nerveStatValue, advantageValue, failsLeft, totalRolls) {
+	if(failsLeft == 0) {
+		return Math.pow(getChanceSingle(nerveStatValue, advantageValue).success, totalRolls);
+	}
+	
+	var cacheKey = nerveStatValue + "|" + advantageValue + "|" + failsLeft + "|" + totalRolls;
+	var result = chanceOfFailCache.get(cacheKey);
+	if(result != null) {
+		return result;
+	}
+	
+	//The fail part of the chances is always the same
+	var precomputedFailChance = 1;
+	var i;
+	for(i = 0; i < failsLeft; ++i) {
+		precomputedFailChance = precomputedFailChance * getChanceSingle(nerveStatValue - i, advantageValue).failure;
+	}
+	
+	//The success part of the chance depends on when the success rolls happen (how many failures precede them)
+	var toSpread = totalRolls - failsLeft;
+	result = precomputedFailChance*getSuccessPathChances(nerveStatValue, advantageValue, toSpread, failsLeft+1);
+	
+	chanceOfFailCache.set(cacheKey, result);
+	return result;
+}
+
 /* Update the page with the current state */
 function updatePage() {
 	//Set share string
@@ -392,8 +470,10 @@ function updatePage() {
 	document.getElementById("maxNervePenalty").innerHTML = maxNervePenaltyString;
 	*/
 	
+	var probTable;
+	
 	//Set calculation tables
-	var probTable = document.getElementById("probTable");
+	probTable = document.getElementById("probTable");
 	probTable.innerHTML = "<tr><th>Number of failures</th><th>Paths to this many failures</th><th>Chance of single path with this many failures</th><th>Chance of this many failures</th><th>Chance of success</th><th>Chance of success without recoup</th><th>Chance of getting this many failures and succeeding</th><th>Chance of getting this many failures and succeeding without recoup</th><th>Weighted nerve penalty</th><th>Weighted nerve penalty without recoup</th></tr>";
 	var x = 0;
 	var y = selectedPath.length - 1;
@@ -443,6 +523,7 @@ function updatePage() {
 		if(minPaths == null || pathsWithXFails < minPaths) {
 			minPaths = pathsWithXFails;
 		}
+		
 		var chanceOfPath = Math.pow(chanceOfFailSingle,x) * Math.pow(chanceOfSuccessSingle,y-x);
 		if(chanceOfPath > maxSingle) {
 			maxSingle = chanceOfPath;
@@ -450,6 +531,7 @@ function updatePage() {
 		if(minSingle == null || chanceOfPath < minSingle) {
 			minSingle = chanceOfPath;
 		}
+		
 		var chanceOfXFails = pathsWithXFails * chanceOfPath;
 		if(chanceOfXFails > maxFailChance) {
 			maxFailChance = chanceOfXFails;
@@ -457,6 +539,7 @@ function updatePage() {
 		if(minFailChance == null || chanceOfXFails < minFailChance) {
 			minFailChance = chanceOfXFails;
 		}
+		
 		var chanceOfXFailsSuccess = Math.min(19,Math.max(1,nerveStatValue-1-Math.max(0,x-sacrificeRecoupValue)))/20;
 		if(chanceOfXFailsSuccess > maxSuccess) {
 			maxSuccess = chanceOfXFailsSuccess;
@@ -464,6 +547,7 @@ function updatePage() {
 		if(minSuccess == null || chanceOfXFailsSuccess < minSuccess) {
 			minSuccess = chanceOfXFailsSuccess;
 		}
+		
 		var chanceOfXFailsSuccessWithoutRecoup = Math.min(19,Math.max(1,nerveStatValue-1-x))/20;
 		if(chanceOfXFailsSuccessWithoutRecoup > maxSuccessWithoutRecoup) {
 			maxSuccessWithoutRecoup = chanceOfXFailsSuccessWithoutRecoup;
@@ -471,6 +555,7 @@ function updatePage() {
 		if(minSuccessWithoutRecoup == null || chanceOfXFailsSuccessWithoutRecoup < minSuccessWithoutRecoup) {
 			minSuccessWithoutRecoup = chanceOfXFailsSuccessWithoutRecoup;
 		}
+		
 		var chanceOfXFailsAndSuccess = chanceOfXFails * chanceOfXFailsSuccess;
 		if(chanceOfXFailsAndSuccess > maxFailsAndSuccess) {
 			maxFailsAndSuccess = chanceOfXFailsAndSuccess;
@@ -478,6 +563,7 @@ function updatePage() {
 		if(minFailsAndSuccess == null || chanceOfXFailsAndSuccess < minFailsAndSuccess) {
 			minFailsAndSuccess = chanceOfXFailsAndSuccess;
 		}
+		
 		var chanceOfXFailsAndSuccessWithoutRecoup = chanceOfXFails * chanceOfXFailsSuccessWithoutRecoup;
 		if(chanceOfXFailsAndSuccessWithoutRecoup > maxFailsAndSuccessWithoutRecoup) {
 			maxFailsAndSuccessWithoutRecoup = chanceOfXFailsAndSuccessWithoutRecoup;
@@ -485,6 +571,7 @@ function updatePage() {
 		if(minFailsAndSuccessWithoutRecoup == null || chanceOfXFailsAndSuccessWithoutRecoup < minFailsAndSuccessWithoutRecoup) {
 			minFailsAndSuccessWithoutRecoup = chanceOfXFailsAndSuccessWithoutRecoup;
 		}
+		
 		var weightedNervePenalty = Math.max(0,x - sacrificeRecoupValue)*chanceOfXFails;
 		if(weightedNervePenalty > maxNerve) {
 			maxNerve = weightedNervePenalty;
@@ -492,6 +579,7 @@ function updatePage() {
 		if(minNerve == null || weightedNervePenalty < minNerve) {
 			minNerve = weightedNervePenalty;
 		}
+		
 		var weightedNervePenaltyWithoutRecoup = x*chanceOfXFails;
 		if(weightedNervePenaltyWithoutRecoup > maxNerveWithoutRecoup) {
 			maxNerveWithoutRecoup = weightedNervePenaltyWithoutRecoup;
@@ -611,6 +699,226 @@ function updatePage() {
 	totalTr.appendChild(totalTd);
 	probTable.appendChild(totalTr);
 	
+	
+	
+	//The new table
+	x = 0; //The current number of failures
+	y = selectedPath.length - 1; //The number of rolls before the final roll. Also the maximum number of failures.
+	
+	//For statistics
+	totalSuccess = 0;
+	totalSuccessWithoutRecoup = 0;
+	totalNervePenalty = 0;
+	totalNervePenaltyWithoutRecoup = 0;
+	maxPaths = 0;
+	minPaths = null;
+	maxFailChance = 0;
+	minFailChance = null;
+	maxSuccess = 0;
+	minSuccess = null;
+	maxSuccessWithoutRecoup = 0;
+	minSuccessWithoutRecoup = null;
+	maxFailsAndSuccess = 0;
+	minFailsAndSuccess = null;
+	maxFailsAndSuccessWithoutRecoup = 0;
+	minFailsAndSuccessWithoutRecoup = null;
+	maxNerve = 0;
+	minNerve = null;
+	maxNerveWithoutRecoup = 0;
+	minNerveWithoutRecoup = null;
+	
+	//Will hold results for all rows
+	var results = {paths: new Array(y),
+				   chanceOfFailures: new Array(y),
+				   chanceOfSuccess: new Array(y),
+				   chanceOfSuccessNoRecoup: new Array(y),
+				   chanceOfFailsAndSuccess: new Array(y),
+				   chanceOfFailsAndSuccessNoRecoup: new Array(y),
+				   weightedNervePenalty: new Array(y),
+				   weightedNervePenaltyNoRecoup: new Array(y)};
+
+	//Do an initial pass to calculate the results
+	for(x = 0; x <= y; x++) {
+		var pathsWithXFails = factorial(y)/(factorial(x)*factorial(y-x));
+		if(pathsWithXFails > maxPaths) {
+			maxPaths = pathsWithXFails;
+		}
+		if(minPaths == null || pathsWithXFails < minPaths) {
+			minPaths = pathsWithXFails;
+		}
+		results.paths[x] = pathsWithXFails;
+		
+		
+		var chanceOfXFails = getChanceOfFails(nerveStatValue, advantageValue, x, y);
+		if(chanceOfXFails > maxFailChance) {
+			maxFailChance = chanceOfXFails;
+		}
+		if(minFailChance == null || chanceOfXFails < minFailChance) {
+			minFailChance = chanceOfXFails;
+		}
+		results.chanceOfFailures[x] = chanceOfXFails;
+		
+		var chanceOfXFailsSuccess = Math.min(19,Math.max(1,nerveStatValue-1-Math.max(0,x-sacrificeRecoupValue)))/20;
+		if(chanceOfXFailsSuccess > maxSuccess) {
+			maxSuccess = chanceOfXFailsSuccess;
+		}
+		if(minSuccess == null || chanceOfXFailsSuccess < minSuccess) {
+			minSuccess = chanceOfXFailsSuccess;
+		}
+		results.chanceOfSuccess[x] = chanceOfXFailsSuccess;
+		
+		var chanceOfXFailsSuccessWithoutRecoup = Math.min(19,Math.max(1,nerveStatValue-1-x))/20;
+		if(chanceOfXFailsSuccessWithoutRecoup > maxSuccessWithoutRecoup) {
+			maxSuccessWithoutRecoup = chanceOfXFailsSuccessWithoutRecoup;
+		}
+		if(minSuccessWithoutRecoup == null || chanceOfXFailsSuccessWithoutRecoup < minSuccessWithoutRecoup) {
+			minSuccessWithoutRecoup = chanceOfXFailsSuccessWithoutRecoup;
+		}
+		results.chanceOfSuccessNoRecoup[x] = chanceOfXFailsSuccessWithoutRecoup;
+		
+		var chanceOfXFailsAndSuccess = chanceOfXFails * chanceOfXFailsSuccess;
+		if(chanceOfXFailsAndSuccess > maxFailsAndSuccess) {
+			maxFailsAndSuccess = chanceOfXFailsAndSuccess;
+		}
+		if(minFailsAndSuccess == null || chanceOfXFailsAndSuccess < minFailsAndSuccess) {
+			minFailsAndSuccess = chanceOfXFailsAndSuccess;
+		}
+		results.chanceOfFailsAndSuccess[x] = chanceOfXFailsAndSuccess;
+		
+		var chanceOfXFailsAndSuccessWithoutRecoup = chanceOfXFails * chanceOfXFailsSuccessWithoutRecoup;
+		if(chanceOfXFailsAndSuccessWithoutRecoup > maxFailsAndSuccessWithoutRecoup) {
+			maxFailsAndSuccessWithoutRecoup = chanceOfXFailsAndSuccessWithoutRecoup;
+		}
+		if(minFailsAndSuccessWithoutRecoup == null || chanceOfXFailsAndSuccessWithoutRecoup < minFailsAndSuccessWithoutRecoup) {
+			minFailsAndSuccessWithoutRecoup = chanceOfXFailsAndSuccessWithoutRecoup;
+		}
+		results.chanceOfFailsAndSuccessNoRecoup[x] = chanceOfXFailsAndSuccessWithoutRecoup;
+		
+		var weightedNervePenalty = Math.max(0,x - sacrificeRecoupValue)*chanceOfXFails;
+		if(weightedNervePenalty > maxNerve) {
+			maxNerve = weightedNervePenalty;
+		}
+		if(minNerve == null || weightedNervePenalty < minNerve) {
+			minNerve = weightedNervePenalty;
+		}
+		results.weightedNervePenalty[x] = weightedNervePenalty;
+		
+		var weightedNervePenaltyWithoutRecoup = x*chanceOfXFails;
+		if(weightedNervePenaltyWithoutRecoup > maxNerveWithoutRecoup) {
+			maxNerveWithoutRecoup = weightedNervePenaltyWithoutRecoup;
+		}
+		if(minNerveWithoutRecoup == null || weightedNervePenaltyWithoutRecoup < minNerveWithoutRecoup) {
+			minNerveWithoutRecoup = weightedNervePenaltyWithoutRecoup;
+		}
+		results.weightedNervePenaltyNoRecoup[x] = weightedNervePenaltyWithoutRecoup;
+		
+		totalSuccess += chanceOfXFailsAndSuccess;
+		totalSuccessWithoutRecoup += chanceOfXFailsAndSuccessWithoutRecoup;
+		totalNervePenalty += weightedNervePenalty;
+		totalNervePenaltyWithoutRecoup += weightedNervePenaltyWithoutRecoup;
+	}
+	
+	probTable = document.getElementById("probTableNew");
+	probTable.innerHTML = "<tr><th>Number of failures</th><th>Paths to this many failures</th><th>Chance of this many failures</th><th>Chance of success</th><th>Chance of success without recoup</th><th>Chance of getting this many failures and succeeding</th><th>Chance of getting this many failures and succeeding without recoup</th><th>Weighted nerve penalty</th><th>Weighted nerve penalty without recoup</th></tr>";
+	
+	//Print the results
+	for(x = 0; x <= y; x++) {
+		var tr = document.createElement("tr");
+		var td = document.createElement("th");
+		td.innerHTML = x;
+		td.style.backgroundColor = colorValue(x,0,y);
+		tr.appendChild(td);
+		
+		//number of paths with x failures: (y!/(x!(y-x)!))
+		var pathsWithXFails = results.paths[x];
+		td = document.createElement("td");
+		td.innerHTML = pathsWithXFails;
+		td.style.backgroundColor = colorValue(pathsWithXFails,minPaths,maxPaths);
+		tr.appendChild(td);
+		
+		//chance of getting a specific number of failures: (y!/(x!(y-x)!))*((1-max(1,skill-1)/20)^x * (max(1,skill-1)/20)^(y-x))
+		var chanceOfXFails = results.chanceOfFailures[x];
+		td = document.createElement("td");
+		td.innerHTML = (chanceOfXFails*100).toFixed(10) + "%";
+		td.style.backgroundColor = colorValue(chanceOfXFails,minFailChance,maxFailChance);
+		tr.appendChild(td);
+		
+		//chance of succeeding with a certain number of failures: (max(1,skill-1-max(0,x-recoup))/20)
+		var chanceOfXFailsSuccess = results.chanceOfSuccess[x];
+		td = document.createElement("td");
+		td.innerHTML = (chanceOfXFailsSuccess*100).toFixed(10) + "%";
+		td.style.backgroundColor = colorValue(chanceOfXFailsSuccess,minSuccess,maxSuccess);
+		tr.appendChild(td);
+		
+		var chanceOfXFailsSuccessWithoutRecoup = results.chanceOfSuccessNoRecoup[x];
+		td = document.createElement("td");
+		td.innerHTML = (chanceOfXFailsSuccessWithoutRecoup*100).toFixed(10) + "%";
+		td.style.backgroundColor = colorValue(chanceOfXFailsSuccessWithoutRecoup,minSuccessWithoutRecoup,maxSuccessWithoutRecoup);
+		tr.appendChild(td);
+		
+		//chance of getting a certain number of failures and succeeding: (y!/(x!(y-x)!))*((1-max(1,skill-1)/20)^x * (max(1,skill-1)/20)^(y-x))*(max(1,skill-1-max(0,x-recoup))/20)
+		var chanceOfXFailsAndSuccess = results.chanceOfFailsAndSuccess[x];
+		td = document.createElement("td");
+		td.innerHTML = (chanceOfXFailsAndSuccess*100).toFixed(10) + "%";
+		td.style.backgroundColor = colorValue(chanceOfXFailsAndSuccess,minFailsAndSuccess,maxFailsAndSuccess);
+		tr.appendChild(td);
+		
+		var chanceOfXFailsAndSuccessWithoutRecoup = results.chanceOfFailsAndSuccessNoRecoup[x];
+		td = document.createElement("td");
+		td.innerHTML = (chanceOfXFailsAndSuccessWithoutRecoup*100).toFixed(10) + "%";
+		td.style.backgroundColor = colorValue(chanceOfXFailsAndSuccessWithoutRecoup,minFailsAndSuccessWithoutRecoup,maxFailsAndSuccessWithoutRecoup);
+		tr.appendChild(td);
+		
+		var weightedNervePenalty = results.weightedNervePenalty[x];
+		td = document.createElement("td");
+		td.innerHTML = (weightedNervePenalty).toFixed(10);
+		td.style.backgroundColor = colorValue(weightedNervePenalty,minNerve,maxNerve);
+		tr.appendChild(td);
+		
+		var weightedNervePenaltyWithoutRecoup = results.weightedNervePenaltyNoRecoup[x];
+		td = document.createElement("td");
+		td.innerHTML = (weightedNervePenaltyWithoutRecoup).toFixed(10);
+		td.style.backgroundColor = colorValue(weightedNervePenaltyWithoutRecoup,minNerveWithoutRecoup,maxNerveWithoutRecoup);
+		tr.appendChild(td);
+		
+		probTable.appendChild(tr);
+	}
+	totalTr = document.createElement("tr");
+	totalTd = document.createElement("th");
+	totalTd.innerHTML = "TOTAL";
+	totalTr.appendChild(totalTd);
+	totalTd = document.createElement("th");
+	//all possible paths: 2^y
+	totalTd.innerHTML = Math.pow(2,y);
+	totalTr.appendChild(totalTd);
+	totalTd = document.createElement("th");
+	totalTd.innerHTML = "-";
+	totalTr.appendChild(totalTd);
+	totalTd = document.createElement("th");
+	totalTd.innerHTML = "-";
+	totalTr.appendChild(totalTd);
+	totalTd = document.createElement("th");
+	totalTd.innerHTML = "-";
+	totalTr.appendChild(totalTd);
+	totalTd = document.createElement("th");
+	totalTd.innerHTML = (totalSuccess*100).toFixed(10) + "%";
+	totalTd.style.backgroundColor = colorValue(totalSuccess,0.05,0.95);
+	totalTr.appendChild(totalTd);
+	totalTd = document.createElement("th");
+	totalTd.innerHTML = (totalSuccessWithoutRecoup*100).toFixed(10) + "%";
+	totalTd.style.backgroundColor = colorValue(totalSuccessWithoutRecoup,0.05,0.95);
+	totalTr.appendChild(totalTd);
+	totalTd = document.createElement("th");
+	totalTd.innerHTML = totalNervePenalty.toFixed(10);
+	totalTd.style.backgroundColor = colorValue(totalNervePenalty,0,y);
+	totalTr.appendChild(totalTd);
+	totalTd = document.createElement("th");
+	totalTd.innerHTML = totalNervePenaltyWithoutRecoup.toFixed(10);
+	totalTd.style.backgroundColor = colorValue(totalNervePenaltyWithoutRecoup,0,y);
+	totalTr.appendChild(totalTd);
+	probTable.appendChild(totalTr);
+	
+	//Update concise results
 	var insanitySuccessOddsString = (totalSuccess*100).toFixed(2) + "%";
 	if(sacrificeRecoupValue > 0) {
 		insanitySuccessOddsString = insanitySuccessOddsString + " (";
@@ -973,6 +1281,22 @@ function popLastSphere() {
 			<div><b>Reinforcements:</b> <ul id="reinforcementList"></ul></div>
 		</form>
 		<div><b>Share Link:</b> <a id="shareString" target="_blank" href=""></a></div>
+	</div>
+	<div>
+		<div>The probability table holds the results of calculations that were used to determine the final success percentage. It is useful for determining exactly how likely a certain number of failures is by using the <b>Chance of this many failures</b> column. Each cell is coloured to quickly give a visual indicator if its value. Red is the highest value for that column. Blue is the lowest value for that column.</div>
+		<form id="probTableForm">
+			<label for="showProbTableNew">Show Probability Table</label><input type="checkbox" id="showProbTableNew" name="showProbTableNew" value="Show Probability Table" checked>
+		</form>
+	</div>
+	<div>
+		<table id="probTableNew">
+		</table>
+	</div>
+	<div>
+		<div>The old probability table assumes that previous failed rolls do not affect the next ones. That means that the numbers displayed here are incorrect, because they are more optimistic than they should. It is left here for comparison.</div>
+		<form id="probTableForm">
+			<label for="showProbTableNew">Show Old Probability Table</label><input type="checkbox" id="showProbTable" name="showProbTable" value="Show Old Probability Table">
+		</form>
 	</div>
 	<div>
 		<table id="probTable">
