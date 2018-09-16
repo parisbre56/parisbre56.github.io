@@ -46,7 +46,13 @@ var maxZoom = 8;
 
 //The current position of the map
 var mapX = 0;
+var mapXMin = 0;
 var mapY = 0;
+var mapYMin = 0;
+
+//The position that will be used to display the map
+var displayMapX = 0;
+var displayMapY = 0;
 
 //The current position of the mouse
 var mouseX = 0;
@@ -74,8 +80,10 @@ function showImage() {
 	//lensHeight = Math.min(maxLensHeight,currMapHeight);
 	lensWidth = maxLensWidth;
 	lensHeight = maxLensHeight;
-	mapX = Math.min(0,Math.max(mapX, -(currMapWidth-lensWidth)));
-	mapY = Math.min(0,Math.max(mapY, -(currMapHeight-lensHeight)));
+	mapXMin = Math.min(0,-(currMapWidth-lensWidth));
+	mapYMin = Math.min(0,-(currMapHeight-lensHeight));
+	displayMapX = Math.min(0,Math.max(mapX, mapXMin));
+	displayMapY = Math.min(0,Math.max(mapY, mapYMin));
 	
 	var lens = document.getElementById(lensId);
 	lens.style.width = lensWidth+'px';
@@ -83,7 +91,7 @@ function showImage() {
 	lens.style.backgroundImage = 'url('+imagePath+')';
 	lens.style.backgroundRepeat = 'no-repeat';
 	lens.style.backgroundSize = currMapWidth+'px '+currMapHeight+'px';
-	lens.style.backgroundPosition = mapX+'px '+mapY+'px';
+	lens.style.backgroundPosition = displayMapX+'px '+displayMapY+'px';
 	
 	lens.addEventListener("mousemove", pointerPos);
 	lens.addEventListener("touchmove", pointerPos);
@@ -94,8 +102,10 @@ function showImage() {
 function zoomIn() {
 	if(zoomLevel <= minZoom)
 		return;
-	mapX = ((mapX*(zoomLevel-1))/zoomLevel).toFixed(0);
-	mapX = ((mapY*(zoomLevel-1))/zoomLevel).toFixed(0);
+	var nextMapWidth = mapWidth/(zoomLevel-1);
+	var nextMapHeight = mapHeight/(zoomLevel-1);
+	mapX = (((mapX-Math.min(currMapWidth,lensWidth)/2)*zoomLevel)/(zoomLevel-1))+(Math.min(nextMapWidth,lensWidth)/2);
+	mapY = (((mapY-Math.min(currMapHeight,lensHeight)/2)*zoomLevel)/(zoomLevel-1))+(Math.min(nextMapHeight,lensHeight)/2);
 	zoomLevel = Math.max(minZoom, zoomLevel - 1);
 	showImage();
 }
@@ -103,28 +113,38 @@ function zoomIn() {
 function zoomOut() {
 	if(zoomLevel >= maxZoom)
 		return;
-	mapX = ((mapX*(zoomLevel+1))/zoomLevel).toFixed(0);
-	mapY = ((mapY*(zoomLevel+1))/zoomLevel).toFixed(0);
+	var nextMapWidth = mapWidth/(zoomLevel+1);
+	var nextMapHeight = mapHeight/(zoomLevel+1);
+	mapX = (((mapX-Math.min(currMapWidth,lensWidth)/2)*zoomLevel)/(zoomLevel+1))+(Math.min(nextMapWidth,lensWidth)/2);
+	mapY = (((mapY-Math.min(currMapHeight,lensHeight)/2)*zoomLevel)/(zoomLevel+1))+(Math.min(nextMapHeight,lensHeight)/2);
 	zoomLevel = Math.min(maxZoom, zoomLevel + 1);
 	showImage();
 }
 
 function right() {
+	if(mapX <= mapXMin)
+		return;
 	mapX = mapX-100;
 	showImage();
 }
 
 function left() {
+	if(mapX >= 0)
+		return;
 	mapX = mapX+100;
 	showImage();
 }
 
 function up() {
+	if(mapY >= 0)
+		return;
 	mapY = mapY+100;
 	showImage();
 }
 
 function down() {
+	if(mapX <= 0)
+		return;
 	mapY = mapY-100;
 	showImage();
 }
@@ -135,8 +155,8 @@ function pointerPos(e) {
 	var pos = getCursorPos(e);
 	mouseX = pos.x;
 	mouseY = pos.y;
-	gridX = gridXStart+(((mouseX-mapX) * zoomLevel)-pixelXOffset)/gridWidth;
-	gridY = gridYStart+(((mouseY-mapY) * zoomLevel)-pixelYOffset)/gridHeight;
+	gridX = gridXStart+(((mouseX-displayMapX) * zoomLevel)-pixelXOffset)/gridWidth;
+	gridY = gridYStart+(((mouseY-displayMapY) * zoomLevel)-pixelYOffset)/gridHeight;
 	resetDebug();
 }
 
@@ -173,6 +193,10 @@ function resetDebug() {
 		+"zoomLevel: "+zoomLevel+"<br>"
 		+"currMapWidth: "+currMapWidth+"<br>"
 		+"currMapHeight: "+currMapHeight+"<br>"
+		+"mapXMin: "+mapXMin+"<br>"
+		+"mapYMin: "+mapYMin+"<br>"
 		+"mapX: "+mapX+"<br>"
-		+"mapY: "+mapY+"<br>";
+		+"mapY: "+mapY+"<br>"
+		+"displayMapX: "+displayMapX+"<br>"
+		+"displayMapY: "+displayMapY+"<br>";
 }
