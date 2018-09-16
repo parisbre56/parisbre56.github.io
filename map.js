@@ -104,7 +104,7 @@ function showImage() {
 	lens.style.backgroundPosition = displayMapX+'px '+displayMapY+'px';
 	
 	lens.addEventListener("mousemove", pointerPos);
-	lens.addEventListener("touchmove", pointerPos);
+	lens.addEventListener("touchmove", touchPos);
 	lens.addEventListener("click", pointerStore);
 	
 	resetDebug();
@@ -164,6 +164,15 @@ function down() {
 function pointerPos(e) {
 	e.preventDefault();
 	var pos = getCursorPos(e);
+	updatePointer(pos);
+}
+
+function touchPos(e) {
+	var pos = getCursorPos({pageX: e.touches[0].clientX, pageY: e.touches[0].clientY});
+	updatePointer(pos);
+}
+
+function updatePointer(pos) {
 	mouseX = pos.x;
 	mouseY = pos.y;
 	gridX = Math.trunc(gridXStart+(((mouseX-displayMapX) * zoomLevel)-pixelXOffset)/gridWidth);
