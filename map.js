@@ -62,6 +62,16 @@ var mouseY = 0;
 var gridX = gridXStart;
 var gridY = gridYStart;
 
+//The position of the last click on the grid
+var storedGridX = gridXStart;
+var storedGridY = gridYStart;
+
+//Distance between click and mouse
+var distanceX = storedGridX - gridX;
+var distanceY = storedGridY - gridY;
+var manhattanDistance = Math.abs(gridX-storedGridX)+Math.abs(gridY-storedGridY);
+var eucledianDistance = Math.sqrt(distanceX*distanceX+distanceY*distanceY);
+
 function setupImg() {
 	var tempImg = document.createElement('img');
 	tempImg.onload = function() {
@@ -95,6 +105,7 @@ function showImage() {
 	
 	lens.addEventListener("mousemove", pointerPos);
 	lens.addEventListener("touchmove", pointerPos);
+	lens.addEventListener("click", pointerStore);
 	
 	resetDebug();
 }
@@ -155,9 +166,24 @@ function pointerPos(e) {
 	var pos = getCursorPos(e);
 	mouseX = pos.x;
 	mouseY = pos.y;
-	gridX = gridXStart+(((mouseX-displayMapX) * zoomLevel)-pixelXOffset)/gridWidth;
-	gridY = gridYStart+(((mouseY-displayMapY) * zoomLevel)-pixelYOffset)/gridHeight;
+	gridX = Math.trunc(gridXStart+(((mouseX-displayMapX) * zoomLevel)-pixelXOffset)/gridWidth);
+	gridY = Math.trunc(gridYStart+(((mouseY-displayMapY) * zoomLevel)-pixelYOffset)/gridHeight);
+	measureDistance();
 	resetDebug();
+}
+
+function pointerStore(e) {
+	storedGridX = Math.trunc(gridXStart+(((mouseX-displayMapX) * zoomLevel)-pixelXOffset)/gridWidth);
+	storedGridY = Math.trunc(gridYStart+(((mouseY-displayMapY) * zoomLevel)-pixelYOffset)/gridHeight);
+	measureDistance();
+	resetDebug();
+}
+
+function measureDistance() {
+	distanceX = gridX - storedGridX;
+	distanceY = gridY - storedGridY;
+	manhattanDistance = Math.abs(distanceX)+Math.abs(distanceY);
+	eucledianDistance = Math.sqrt(distanceX*distanceX+distanceY*distanceY);
 }
 
 function getCursorPos(e) {
@@ -177,7 +203,13 @@ function getCursorPos(e) {
 function resetDebug() {
 	var container = document.getElementById(debugContainerId);
 	container.innerHTML = 
-		"<b>"+Math.floor(gridX)+", "+Math.floor(gridY)+"</b><br>"
+		"<b>Current: "+gridX+", "+gridY+"</b> (Current grid position)<br>"
+		+"<b>Stored: "+storedGridX+", "+storedGridY+"</b> (Click map to store)<br>"
+		+"distanceX: "+distanceX+" (Distance in the horizontal axis)<br>"
+		+"distanceY: "+distanceY+" (Distance in the vertical axis)<br>"
+		+"manhattanDistance: "+manhattanDistance+" (Distance is the sum of horizontal and vertical distance)<br>"
+		+"eucledianDistance: "+eucledianDistance.toFixed(2)+" (Distance is measured normally)<br>"
+		+"<br>"
 		+"mouseX: "+mouseX+"<br>"
 		+"mouseY: "+mouseY+"<br>"
 		+"gridWidth: "+gridWidth+"<br>"
