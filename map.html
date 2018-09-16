@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+<meta name="description" content="An interactive map for the DIG 2.0 RP">
+<meta name="keywords" content="Dig,RP,Map">
+<meta name="author" content="Parisbre56">
+
+<title>DIG Map</title>
+
+<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico"/>
+<link rel="icon" type="image/x-icon" href="/favicon.ico"/>
+
+<script src="map.js"></script>
+
+</head>
+<body onload="setupImg()">
+
+<div id="mapImg"></div>
+<button type="button" onclick="zoomIn()">+</button>
+<button type="button" onclick="zoomOut()">-</button>
+<button type="button" onclick="left()">&lt;</button>
+<button type="button" onclick="right()">&gt;</button>
+<button type="button" onclick="up()">^</button>
+<button type="button" onclick="down()">v</button>
+<div id="debugContainer"></div>
+
+</body>
+</html>
