@@ -250,7 +250,7 @@ function up() {
 }
 
 function down() {
-	if(mapX <= 0)
+	if(mapY <= mapYMin)
 		return;
 	mapY = mapY-100;
 	showImage();
