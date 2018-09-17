@@ -14,16 +14,37 @@
 
 <script src="map.js"></script>
 
+<style>
+#mapImg {
+	display: block;
+}
+</style>
+
 </head>
 <body onload="setupImg()">
 
-<div id="mapImg"></div>
+<canvas id="mapImg"></canvas>
 <button type="button" onclick="zoomIn()">+ Zoom In</button>
 <button type="button" onclick="zoomOut()">- Zoom Out</button>
 <button type="button" onclick="left()">&lt; Left</button>
 <button type="button" onclick="right()">&gt; Right</button>
 <button type="button" onclick="up()">^ Up</button>
 <button type="button" onclick="down()">v Down</button>
+<form id="fuelForm">
+	<input type="radio" name="moveType" value="digging" id="moveTypeDigging"><label for="moveTypeDigging">Digging (2 fuel/tile)</label><br>
+	<input type="radio" name="moveType" value="walking" id="moveTypeWalking" checked><label for="moveTypeWalking">Walking (1 fuel/tile)</label><br>
+	<input type="radio" name="moveType" value="carried" id="moveTypeCarried"><label for="moveTypeCarried">Carried (0 fuel/tile)</label>
+</form> 
+<button type="button" onclick="popPath()">Remove last point</button>
+<form id="clickForm">
+	<input type="radio" name="clickType" value="add" id="clickTypeAdd" checked><label for="clickTypeAdd">Clicking adds a point to the path</label><br>
+	<input type="radio" name="clickType" value="remOld" id="clickTypeRemOld"><label for="clickTypeRemOld">Clicking removes the the oldest point</label><br>
+	<input type="radio" name="clickType" value="remNew" id="clickTypeRemNew"><label for="clickTypeRemNew">Clicking removes the the newest point</label><br>
+	<input type="radio" name="clickType" value="movSel" id="clickTypeMovSel"><label for="clickTypeMovSel">Clicking selects the newest point</label><br>
+	<input type="radio" name="clickType" value="movDo" id="clickTypeMovDo"><label for="clickTypeMovDo">Clicking moves the selected point</label><br>
+	<input type="radio" name="clickType" value="movDo" id="clickTypeAddSel"><label for="clickTypeAddSel">Clicking makes a new point after the selected point and selects it</label><br>
+	<input type="radio" name="clickType" value="nop" id="clickTypeNop"><label for="clickTypeNop">Clicking does nothing</label>
+</form> 
 <div id="debugContainer"></div>
 
 </body>
