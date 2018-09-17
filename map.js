@@ -27,6 +27,7 @@ var lensHeight = 600;
 
 
 var lensId = 'mapImg';
+var shareStringId = 'shareString';
 var debugContainerId = 'debugContainer';
 
 var moveTypeDiggingId = 'moveTypeDigging';
@@ -116,8 +117,32 @@ function setupImg() {
 		lens.addEventListener("mousemove", pointerPos);
 		lens.addEventListener("touchmove", touchPos);
 		lens.addEventListener("click", pointerStore);
+		
+		var loadString = getParameterByName("path");
+		console.log("Loading path [loadString="+loadString+"]");
+		if(loadString != null && loadString.length > 1) {
+			var splitLoadString = loadString.split(",");
+			console.log("Loading split path [splitLoadString.length="+splitLoadString.length+", splitLoadString=["+splitLoadString+"]]");
+			for(var loadIndex=0; loadIndex < splitLoadString.length; loadIndex++) {
+				var toLoad = splitLoadString[loadIndex];
+				console.log("Loading [toLoad="+toLoad+"]");
+				var splitToLoad = toLoad.split('!');
+				storePath(Number(splitToLoad[0]), Number(splitToLoad[1]), false, Number(splitToLoad[2]));
+			}
+		}
 	}
 	mapImg.src=imagePath;
+}
+
+function getParameterByName(name, url) {
+    if (!url) url = window.location.href;
+	console.log("getParameterByName [name="+name+", url="+url+"]");
+    name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
 function showImage() {
@@ -273,8 +298,20 @@ function pointerStore(e) {
 	storedGridY = posYToGridY(mouseY);
 	measureDistance();
 	resetDebug();
+	
+	var fuelCost = 0;
+	if(document.getElementById(moveTypeDiggingId).checked) {
+		fuelCost = 2;
+	}
+	else if(document.getElementById(moveTypeWalkingId).checked) {
+		fuelCost = 1;
+	}
+	else if(document.getElementById(moveTypeCarriedId).checked) {
+		fuelCost = 0;
+	}
+	
 	if(document.getElementById(clickTypeAddId).checked) {
-		storePath(storedGridX, storedGridY, false);
+		storePath(storedGridX, storedGridY, false, fuelCost);
 	}
 	else if(document.getElementById(clickTypeRemNewId).checked) {
 		removePath(storedGridX, storedGridY, true);
@@ -289,25 +326,14 @@ function pointerStore(e) {
 		movePath(storedGridX, storedGridY);
 	}
 	else if(document.getElementById(clickTypeAddSelId).checked) {
-		storePath(storedGridX, storedGridY, true);
+		storePath(storedGridX, storedGridY, true, fuelCost);
 	}
 	else if(document.getElementById(clickTypeNopId).checked) {
 		//Do nothing
 	}
 }
 
-function storePath(posX, posY, addIndex) {
-	var fuelCost = 0;
-	if(document.getElementById(moveTypeDiggingId).checked) {
-		fuelCost = 2;
-	}
-	else if(document.getElementById(moveTypeWalkingId).checked) {
-		fuelCost = 1;
-	}
-	else if(document.getElementById(moveTypeCarriedId).checked) {
-		fuelCost = 0;
-	}
-	
+function storePath(posX, posY, addIndex, fuelCost) {	
 	var toAdd = {x: posX, y: posY, f: fuelCost};
 	
 	if(addIndex && selForMove != null && selForMove < selectedPath.length - 1) {
@@ -482,4 +508,18 @@ function resetDebug() {
 		debugString = debugString + i + ": [" + currPoint.x + ", " + currPoint.y + ", " + currPoint.f + "]<br>";
 	}
 	container.innerHTML = debugString;
+	
+	var currUrl = window.location.href.substring(0, window.location.href.length-window.location.search.length);
+	console.log("currUrl="+currUrl);
+	var currPathString = '';
+	if(selectedPath.length > 0) {
+		currPathString = currPathString + selectedPath[0].x + "!" + selectedPath[0].y + "!" + selectedPath[0].f;
+		for(i = 1; i < selectedPath.length; ++i) {
+			var currPoint = selectedPath[i];
+			currPathString = currPathString + "," + currPoint.x + "!" + currPoint.y + "!" + currPoint.f;
+		}
+	}
+	var shareString = currUrl+"?path="+currPathString;
+	document.getElementById(shareStringId).innerHTML = shareString;
+	document.getElementById(shareStringId).href = shareString;
 }
