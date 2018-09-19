@@ -118,6 +118,7 @@ function setupImg() {
 		lens.addEventListener("mousemove", pointerPos);
 		lens.addEventListener("touchmove", touchPos);
 		lens.addEventListener("click", pointerStore);
+		window.addEventListener('orientationchange', showImage, false);
 		
 		var loadString = getParameterByName("path");
 		console.log("Loading path [loadString="+loadString+"]");
@@ -146,6 +147,7 @@ function setupImg() {
 		if(loadString != null && loadString.length > 0 && !isNaN(Number(loadString))) {
 			zoomLevel = Number(loadString);
 		}
+		
 		showImage();
 	}
 	mapImg.src=imagePath;
@@ -163,6 +165,20 @@ function getParameterByName(name, url) {
 }
 
 function showImage() {
+	viewport = document.querySelector("meta[name=viewport]");
+	if(window.orientation != null) {
+		switch (window.orientation) {
+			case 90: 
+			case -90: //landscape
+				viewport.setAttribute('content', 'width=device-height');
+				break;
+			case 0: //portrait
+			default:
+				viewport.setAttribute('content', 'width=device-width');
+				break;
+		}
+	}
+	
 	currMapWidth = mapWidth/zoomLevel;
 	currMapHeight = mapHeight/zoomLevel;
 	//lensWidth = Math.min(maxLensWidth,currMapWidth);
@@ -175,8 +191,8 @@ function showImage() {
 	displayMapY = Math.min(0,Math.max(mapY, mapYMin));
 	
 	var lens = document.getElementById(lensId);
-	lens.width = lensWidth;
-	lens.height = lensHeight;
+	lens.width = Math.min(window.innerWidth, lensWidth);
+	lens.height = Math.min(window.innerHeight, lensHeight);
 	
 	var context = lens.getContext('2d');
 	context.clearRect(0, 0, lensWidth, lensHeight);
