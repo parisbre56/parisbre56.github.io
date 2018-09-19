@@ -130,6 +130,21 @@ function setupImg() {
 				storePath(Number(splitToLoad[0]), Number(splitToLoad[1]), false, Number(splitToLoad[2]));
 			}
 		}
+		loadString = getParameterByName("mapX");
+		console.log("Loading mapX [loadString="+loadString+"]");
+		if(loadString != null && loadString.length > 1 && !isNaN(Number(loadString))) {
+			mapX = Number(loadString);
+		}
+		loadString = getParameterByName("mapY");
+		console.log("Loading mapY [loadString="+loadString+"]");
+		if(loadString != null && loadString.length > 1 && !isNaN(Number(loadString))) {
+			mapY = Number(loadString);
+		}
+		loadString = getParameterByName("zoomLevel");
+		console.log("Loading zoomLevel [loadString="+loadString+"]");
+		if(loadString != null && loadString.length > 1 && !isNaN(Number(loadString))) {
+			zoomLevel = Number(loadString);
+		}
 	}
 	mapImg.src=imagePath;
 }
@@ -529,7 +544,7 @@ function resetDebug() {
 			currPathString = currPathString + "," + currPoint.x + "!" + currPoint.y + "!" + currPoint.f;
 		}
 	}
-	var shareString = currUrl+"?path="+currPathString;
+	var shareString = currUrl+"?mapX="+mapX+"&mapY="+mapY+"&zoomLevel="+zoomLevel+"&path="+currPathString;
 	document.getElementById(shareStringId).innerHTML = shareString;
 	document.getElementById(shareStringId).href = shareString;
 }
