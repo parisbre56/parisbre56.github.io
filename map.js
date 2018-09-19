@@ -133,17 +133,17 @@ function setupImg() {
 		}
 		loadString = getParameterByName("mapX");
 		console.log("Loading mapX [loadString="+loadString+"]");
-		if(loadString != null && loadString.length > 1 && !isNaN(Number(loadString))) {
+		if(loadString != null && loadString.length > 0 && !isNaN(Number(loadString))) {
 			mapX = Number(loadString);
 		}
 		loadString = getParameterByName("mapY");
 		console.log("Loading mapY [loadString="+loadString+"]");
-		if(loadString != null && loadString.length > 1 && !isNaN(Number(loadString))) {
+		if(loadString != null && loadString.length > 0 && !isNaN(Number(loadString))) {
 			mapY = Number(loadString);
 		}
 		loadString = getParameterByName("zoomLevel");
 		console.log("Loading zoomLevel [loadString="+loadString+"]");
-		if(loadString != null && loadString.length > 1 && !isNaN(Number(loadString))) {
+		if(loadString != null && loadString.length > 0 && !isNaN(Number(loadString))) {
 			zoomLevel = Number(loadString);
 		}
 		showImage();
