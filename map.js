@@ -118,7 +118,8 @@ function setupImg() {
 		lens.addEventListener("mousemove", pointerPos);
 		lens.addEventListener("touchmove", touchPos);
 		lens.addEventListener("click", pointerStore);
-		window.addEventListener('orientationchange', showImage, false);
+		window.addEventListener('orientationchange', showImage);
+		window.addEventListener("resize", showImage);
 		
 		var loadString = getParameterByName("path");
 		console.log("Loading path [loadString="+loadString+"]");
@@ -181,18 +182,16 @@ function showImage() {
 	
 	currMapWidth = mapWidth/zoomLevel;
 	currMapHeight = mapHeight/zoomLevel;
-	//lensWidth = Math.min(maxLensWidth,currMapWidth);
-	//lensHeight = Math.min(maxLensHeight,currMapHeight);
-	lensWidth = maxLensWidth;
-	lensHeight = maxLensHeight;
+	lensWidth = Math.min(window.innerWidth, maxLensWidth);;
+	lensHeight = Math.min(window.innerHeight, maxLensHeight);
 	mapXMin = Math.min(0,-(currMapWidth-lensWidth));
 	mapYMin = Math.min(0,-(currMapHeight-lensHeight));
 	displayMapX = Math.min(0,Math.max(mapX, mapXMin));
 	displayMapY = Math.min(0,Math.max(mapY, mapYMin));
 	
 	var lens = document.getElementById(lensId);
-	lens.width = Math.min(window.innerWidth, lensWidth);
-	lens.height = Math.min(window.innerHeight, lensHeight);
+	lens.width = lensWidth;
+	lens.height = lensWidth;
 	
 	var context = lens.getContext('2d');
 	context.clearRect(0, 0, lensWidth, lensHeight);
