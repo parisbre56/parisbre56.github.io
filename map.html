@@ -23,21 +23,27 @@ h1 {
 	color: #ffffff;
 }
 nav a {
-	color: limegreen;
+	color: cyan;
 }
 footer {
 	color: #ffffff;
 }
 button {
-	min-width: 15%;
+	min-width: 100px;
+	min-height: 30px;
 }
 #borderDiv {
-	background-color: #303030;
+	overflow: hidden;
+}
+#mapImg {
+	float: left;
+	background-color: #030200;
 }
 .mapBorder {
 	border-style: inset;
 	border-width: medium;
 	border-color: #cccccc;
+	background-color: #1b1b1b;
 }
 </style>
 
@@ -46,32 +52,56 @@ button {
 
 <div id="borderDiv" class="mapBorder">
 	<canvas id="mapImg" class="mapBorder"></canvas>
-	<button type="button" onclick="zoomIn()">+ Zoom In</button>
-	<button type="button" onclick="zoomOut()">- Zoom Out</button>
-	<button type="button" onclick="left()">&lt; Left</button>
-	<button type="button" onclick="right()">&gt; Right</button>
-	<button type="button" onclick="up()">^ Up</button>
-	<button type="button" onclick="down()">v Down</button>
+	<div>
+		<button type="button" onclick="zoomIn()">+ Zoom In</button>
+		<button type="button" onclick="zoomOut()">- Zoom Out</button><br>
+		<button type="button" onclick="left()">&lt; Left</button>
+		<button type="button" onclick="right()">&gt; Right</button><br>
+		<button type="button" onclick="up()">^ Up</button>
+		<button type="button" onclick="down()">v Down</button>
+	</div>
+	
+	<form id="fuelForm">
+		<input type="radio" name="moveType" value="digging" id="moveTypeDigging"><label for="moveTypeDigging">Digging (2 fuel/tile)</label><br>
+		<input type="radio" name="moveType" value="walking" id="moveTypeWalking" checked><label for="moveTypeWalking">Walking (1 fuel/tile)</label><br>
+		<input type="radio" name="moveType" value="carried" id="moveTypeCarried"><label for="moveTypeCarried">Carried (0 fuel/tile)</label>
+	</form> 
+	
+	<button type="button" onclick="popPath()">Remove last point</button>
+	
+	<form id="clickForm">
+		<input type="radio" name="clickType" value="add" id="clickTypeAdd" checked><label for="clickTypeAdd">Clicking adds a point to the path</label><br>
+		<input type="radio" name="clickType" value="remOld" id="clickTypeRemOld"><label for="clickTypeRemOld">Clicking removes the the oldest point</label><br>
+		<input type="radio" name="clickType" value="remNew" id="clickTypeRemNew"><label for="clickTypeRemNew">Clicking removes the the newest point</label><br>
+		<input type="radio" name="clickType" value="movSel" id="clickTypeMovSel"><label for="clickTypeMovSel">Clicking selects the newest point</label><br>
+		<input type="radio" name="clickType" value="movDo" id="clickTypeMovDo"><label for="clickTypeMovDo">Clicking moves the selected point</label><br>
+		<input type="radio" name="clickType" value="movDo" id="clickTypeAddSel"><label for="clickTypeAddSel">Clicking makes a new point after the selected point and selects it</label><br>
+		<input type="radio" name="clickType" value="nop" id="clickTypeNop"><label for="clickTypeNop">Clicking does nothing</label>
+	</form> 
+	
+	<table>
+		<tr><th onclick="alert('Current grid position. Use mouse pointer to point or touch and drag if using a mobile device.')">Current</th><td><span id="gridX"></span>, <span id="gridY"></span></td></tr>
+		<tr><th onclick="alert('Stored grid position. Click map to store.')">Stored</th><td><span id="storedGridX"></span>, <span id="storedGridY"></span></td></tr>
+		<tr><th onclick="alert('Distance in the horizontal and vertical axis between stored and current grid position.')">Distance</th><td><span id="distanceX"></span>, <span id="distanceY"></span></td></tr>
+		<tr><th onclick="alert('Distance is the sum of horizontal and vertical distance between stored and current grid position.')">Manhattan Distance</th><td id="manhattanDistance"></td></tr>
+		<tr onclick="alert('Distance is measured normally between stored and current grid position.')"><th>Euclidean Distance</th><td id="euclideanDistance"></td></tr>
+		<tr><th onclick="alert('The index of the point currently selected for move or null if none is selected.')">Selected</th><td id="selForMove"></td></tr>
+	</table>
 </div>
 
-<form id="fuelForm">
-	<input type="radio" name="moveType" value="digging" id="moveTypeDigging"><label for="moveTypeDigging">Digging (2 fuel/tile)</label><br>
-	<input type="radio" name="moveType" value="walking" id="moveTypeWalking" checked><label for="moveTypeWalking">Walking (1 fuel/tile)</label><br>
-	<input type="radio" name="moveType" value="carried" id="moveTypeCarried"><label for="moveTypeCarried">Carried (0 fuel/tile)</label>
-</form> 
-
-<button type="button" onclick="popPath()">Remove last point</button>
-
-<form id="clickForm">
-	<input type="radio" name="clickType" value="add" id="clickTypeAdd" checked><label for="clickTypeAdd">Clicking adds a point to the path</label><br>
-	<input type="radio" name="clickType" value="remOld" id="clickTypeRemOld"><label for="clickTypeRemOld">Clicking removes the the oldest point</label><br>
-	<input type="radio" name="clickType" value="remNew" id="clickTypeRemNew"><label for="clickTypeRemNew">Clicking removes the the newest point</label><br>
-	<input type="radio" name="clickType" value="movSel" id="clickTypeMovSel"><label for="clickTypeMovSel">Clicking selects the newest point</label><br>
-	<input type="radio" name="clickType" value="movDo" id="clickTypeMovDo"><label for="clickTypeMovDo">Clicking moves the selected point</label><br>
-	<input type="radio" name="clickType" value="movDo" id="clickTypeAddSel"><label for="clickTypeAddSel">Clicking makes a new point after the selected point and selects it</label><br>
-	<input type="radio" name="clickType" value="nop" id="clickTypeNop"><label for="clickTypeNop">Clicking does nothing</label>
-</form> 
-
+<table class="mapBorder">
+	<tr><th onclick="alert('Total cost of movement assuming euclidean distances.')">Total Euclidean Cost</th><td id="euclideanCostTotal"></td></tr>
+	<tr><th onclick="alert('Total cost of movement assuming manhattan distances.')">Total Manhattan Cost</th><td id="manhattanCostTotal"></td></tr>
+	<tr><th onclick="alert('Total length of path assuming euclidean distances.')">Total Euclidean Distance</th><td id="euclideanDistanceTotal"></td></tr>
+	<tr><th onclick="alert('Total length of path assuming manhattan distances.')">Total Manhattan Distance</th><td id="manhattanDistanceTotal"></td></tr>
+	<tr><th onclick="alert('The length of the part of the path that will be dug through assuming euclidean distances.')">Digging Euclidean Distance</th><td id="euclideanDistanceDigging"></td></tr>
+	<tr><th onclick="alert('The length of the part of the path that will be dug through assuming manhattan distances.')">Digging Manhattan Distance</th><td id="manhattanDistanceDigging"></td></tr>
+	<tr><th onclick="alert('The length of the part of the path that will be walked assuming euclidean distances.')">Walking Euclidean Distance</th><td id="euclideanDistanceWalking"></td></tr>
+	<tr><th onclick="alert('The length of the part of the path that will be walked assuming manhattan distances.')">Walking Manhattan Distance</th><td id="manhattanDistanceWalking"></td></tr>
+	<tr><th onclick="alert('The length of the part of the path through which the bore will be carried assuming euclidean distances.')">Carried Euclidean Distance</th><td id="euclideanDistanceCarried"></td></tr>
+	<tr><th onclick="alert('The length of the part of the path through which the bore will be carried assuming manhattan distances.')">Carried Manhattan Distance</th><td id="manhattanDistanceCarried"></td></tr>
+</table>
+		
 <div><b>Share Link:</b> <a id="shareString" target="_blank" href=""></a></div>
 
 <div id="debugContainer"></div>
