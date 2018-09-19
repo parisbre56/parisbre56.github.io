@@ -15,9 +15,6 @@
 <script src="map.js"></script>
 
 <style>
-#mapImg {
-	display: block;
-}
 body {
 	background-color: #101010;
 	color: #ffffff;
@@ -34,24 +31,38 @@ footer {
 button {
 	min-width: 15%;
 }
+#mapImg {
+	display: block;
+}
+.mapBorder {
+	border-style: inset;
+	border-width: medium;
+	border-color: #cccccc;
+}
 </style>
 
 </head>
 <body onload="setupImg()">
 
-<canvas id="mapImg"></canvas>
+<div class="mapBorder">
+	<canvas id="mapImg"></canvas>
+</div>
+
 <button type="button" onclick="zoomIn()">+ Zoom In</button>
 <button type="button" onclick="zoomOut()">- Zoom Out</button>
 <button type="button" onclick="left()">&lt; Left</button>
 <button type="button" onclick="right()">&gt; Right</button>
 <button type="button" onclick="up()">^ Up</button>
 <button type="button" onclick="down()">v Down</button>
+
 <form id="fuelForm">
 	<input type="radio" name="moveType" value="digging" id="moveTypeDigging"><label for="moveTypeDigging">Digging (2 fuel/tile)</label><br>
 	<input type="radio" name="moveType" value="walking" id="moveTypeWalking" checked><label for="moveTypeWalking">Walking (1 fuel/tile)</label><br>
 	<input type="radio" name="moveType" value="carried" id="moveTypeCarried"><label for="moveTypeCarried">Carried (0 fuel/tile)</label>
 </form> 
+
 <button type="button" onclick="popPath()">Remove last point</button>
+
 <form id="clickForm">
 	<input type="radio" name="clickType" value="add" id="clickTypeAdd" checked><label for="clickTypeAdd">Clicking adds a point to the path</label><br>
 	<input type="radio" name="clickType" value="remOld" id="clickTypeRemOld"><label for="clickTypeRemOld">Clicking removes the the oldest point</label><br>
@@ -61,7 +72,9 @@ button {
 	<input type="radio" name="clickType" value="movDo" id="clickTypeAddSel"><label for="clickTypeAddSel">Clicking makes a new point after the selected point and selects it</label><br>
 	<input type="radio" name="clickType" value="nop" id="clickTypeNop"><label for="clickTypeNop">Clicking does nothing</label>
 </form> 
+
 <div><b>Share Link:</b> <a id="shareString" target="_blank" href=""></a></div>
+
 <div id="debugContainer"></div>
 
 </body>
