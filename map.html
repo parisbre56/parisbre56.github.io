@@ -31,8 +31,8 @@ footer {
 button {
 	min-width: 15%;
 }
-#mapImg {
-	display: block;
+#borderDiv {
+	background-color: #303030;
 }
 .mapBorder {
 	border-style: inset;
@@ -44,16 +44,15 @@ button {
 </head>
 <body onload="setupImg()">
 
-<span class="mapBorder">
-	<canvas id="mapImg"></canvas>
-</span>
-
-<button type="button" onclick="zoomIn()">+ Zoom In</button>
-<button type="button" onclick="zoomOut()">- Zoom Out</button>
-<button type="button" onclick="left()">&lt; Left</button>
-<button type="button" onclick="right()">&gt; Right</button>
-<button type="button" onclick="up()">^ Up</button>
-<button type="button" onclick="down()">v Down</button>
+<div id="borderDiv" class="mapBorder">
+	<canvas id="mapImg" class="mapBorder"></canvas>
+	<button type="button" onclick="zoomIn()">+ Zoom In</button>
+	<button type="button" onclick="zoomOut()">- Zoom Out</button>
+	<button type="button" onclick="left()">&lt; Left</button>
+	<button type="button" onclick="right()">&gt; Right</button>
+	<button type="button" onclick="up()">^ Up</button>
+	<button type="button" onclick="down()">v Down</button>
+</div>
 
 <form id="fuelForm">
 	<input type="radio" name="moveType" value="digging" id="moveTypeDigging"><label for="moveTypeDigging">Digging (2 fuel/tile)</label><br>
