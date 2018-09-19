@@ -28,6 +28,7 @@ var lensHeight = 600;
 
 var lensId = 'mapImg';
 var shareStringId = 'shareString';
+
 var debugContainerId = 'debugContainer';
 
 var moveTypeDiggingId = 'moveTypeDigging';
@@ -86,7 +87,7 @@ var storedGridY = gridYStart;
 var distanceX = storedGridX - gridX;
 var distanceY = storedGridY - gridY;
 var manhattanDistance = Math.abs(gridX-storedGridX)+Math.abs(gridY-storedGridY);
-var eucledianDistance = Math.sqrt(distanceX*distanceX+distanceY*distanceY);
+var euclideanDistance = Math.sqrt(distanceX*distanceX+distanceY*distanceY);
 
 //Colors and fuel cost. Fuel costs must be unique because they are used to detect point type
 var diggingColor = 'red';
@@ -425,7 +426,7 @@ function measureDistance() {
 	distanceX = gridX - storedGridX;
 	distanceY = gridY - storedGridY;
 	manhattanDistance = Math.abs(distanceX)+Math.abs(distanceY);
-	eucledianDistance = Math.sqrt(distanceX*distanceX+distanceY*distanceY);
+	euclideanDistance = Math.sqrt(distanceX*distanceX+distanceY*distanceY);
 }
 
 function getCursorPos(e) {
@@ -443,70 +444,73 @@ function getCursorPos(e) {
 }
 
 function resetDebug() {
-	var container = document.getElementById(debugContainerId);
+	setElementInner("gridX", gridX);
+	setElementInner("gridY", gridY);
+	setElementInner("storedGridX", storedGridX);
+	setElementInner("storedGridY", storedGridY);
+	setElementInner("distanceX", distanceX);
+	setElementInner("distanceY", distanceY);
+	setElementInner("manhattanDistance", manhattanDistance);
+	setElementInner("euclideanDistance", euclideanDistance.toFixed(2));
+	setElementInner("selForMove", selForMove == null ? "None" : selForMove);
+	
 	var i;
-	var eucledianDistanceTotal = 0;
+	var euclideanDistanceTotal = 0;
 	var manhattanDistanceTotal = 0;
-	var eucledianDistanceDigging = 0;
+	var euclideanDistanceDigging = 0;
 	var manhattanDistanceDigging = 0;
-	var eucledianDistanceWalking = 0;
+	var euclideanDistanceWalking = 0;
 	var manhattanDistanceWalking = 0;
-	var eucledianDistanceCarried = 0;
+	var euclideanDistanceCarried = 0;
 	var manhattanDistanceCarried = 0;
-	var eucledianCostTotal = 0;
+	var euclideanCostTotal = 0;
 	var manhattanCostTotal = 0;
 	for(i = 1; i < selectedPath.length; ++i) {
 		var prevPoint = selectedPath[i-1];
 		var currPoint = selectedPath[i];
 		
-		distanceX = currPoint.x - prevPoint.x;
-		distanceY = currPoint.y - prevPoint.y;
+		var tempDistanceX = currPoint.x - prevPoint.x;
+		var tempDistanceY = currPoint.y - prevPoint.y;
 		
-		var tempEucledianDistance = Math.sqrt(distanceX*distanceX+distanceY*distanceY);
-		var tempManhattanDistance = Math.abs(distanceX)+Math.abs(distanceY);
+		var tempEuclideanDistance = Math.sqrt(tempDistanceX*tempDistanceX + tempDistanceY*tempDistanceY);
+		var tempManhattanDistance = Math.abs(tempDistanceX) + Math.abs(tempDistanceY);
 		
-		eucledianDistanceTotal = eucledianDistanceTotal + tempEucledianDistance;
+		euclideanDistanceTotal = euclideanDistanceTotal + tempEuclideanDistance;
 		manhattanDistanceTotal = manhattanDistanceTotal + tempManhattanDistance;
 		if(currPoint.f == diggingCost) {
-			eucledianDistanceDigging = eucledianDistanceDigging + tempEucledianDistance;
+			euclideanDistanceDigging = euclideanDistanceDigging + tempEuclideanDistance;
 			manhattanDistanceDigging = manhattanDistanceDigging + tempManhattanDistance;
-			eucledianCostTotal = eucledianCostTotal + diggingCost * tempEucledianDistance;
+			euclideanCostTotal = euclideanCostTotal + diggingCost * tempEuclideanDistance;
 			manhattanCostTotal = manhattanCostTotal + diggingCost * tempManhattanDistance;
 		}
 		else if(currPoint.f == walkingCost) {
-			eucledianDistanceWalking = eucledianDistanceWalking + tempEucledianDistance;
+			euclideanDistanceWalking = euclideanDistanceWalking + tempEuclideanDistance;
 			manhattanDistanceWalking = manhattanDistanceWalking + tempManhattanDistance;
-			eucledianCostTotal = eucledianCostTotal + walkingCost * tempEucledianDistance;
+			euclideanCostTotal = euclideanCostTotal + walkingCost * tempEuclideanDistance;
 			manhattanCostTotal = manhattanCostTotal + walkingCost * tempManhattanDistance;
 		}
 		else if(currPoint.f == carriedCost) {
-			eucledianDistanceCarried = eucledianDistanceCarried + tempEucledianDistance;
+			euclideanDistanceCarried = euclideanDistanceCarried + tempEuclideanDistance;
 			manhattanDistanceCarried = manhattanDistanceCarried + tempManhattanDistance;
-			eucledianCostTotal = eucledianCostTotal + carriedCost * tempEucledianDistance;
+			euclideanCostTotal = euclideanCostTotal + carriedCost * tempEuclideanDistance;
 			manhattanCostTotal = manhattanCostTotal + carriedCost * tempManhattanDistance;
 		}
 	}
+	
+	setElementInner("euclideanDistanceTotal", euclideanDistanceTotal.toFixed(2));
+	setElementInner("manhattanDistanceTotal", manhattanDistanceTotal);
+	setElementInner("euclideanCostTotal", euclideanCostTotal.toFixed(2));
+	setElementInner("manhattanCostTotal", manhattanCostTotal);
+	setElementInner("euclideanDistanceDigging", euclideanDistanceDigging.toFixed(2));
+	setElementInner("manhattanDistanceDigging", manhattanDistanceDigging);
+	setElementInner("euclideanDistanceWalking", euclideanDistanceWalking.toFixed(2));
+	setElementInner("manhattanDistanceWalking", manhattanDistanceWalking);
+	setElementInner("euclideanDistanceCarried", euclideanDistanceCarried.toFixed(2));
+	setElementInner("manhattanDistanceCarried", manhattanDistanceCarried);
+	
+	var container = document.getElementById(debugContainerId);
 	var debugString = 
-		"<b>Current: "+gridX+", "+gridY+"</b> (Current grid position)<br>"
-		+"<b>Stored: "+storedGridX+", "+storedGridY+"</b> (Click map to store)<br>"
-		+"distanceX: "+distanceX+" (Distance in the horizontal axis)<br>"
-		+"distanceY: "+distanceY+" (Distance in the vertical axis)<br>"
-		+"manhattanDistance: "+manhattanDistance+" (Distance is the sum of horizontal and vertical distance)<br>"
-		+"eucledianDistance: "+eucledianDistance.toFixed(2)+" (Distance is measured normally)<br>"
-		+"selForMove: "+selForMove+"<br>"
-		+"<br>"
-		+"eucledianDistanceTotal: "+eucledianDistanceTotal.toFixed(2)+"<br>"
-		+"manhattanDistanceTotal: "+manhattanDistanceTotal+"<br>"
-		+"<b>eucledianCostTotal:</b> "+eucledianCostTotal.toFixed(2)+"<br>"
-		+"<b>manhattanCostTotal:</b> "+manhattanCostTotal+"<br>"
-		+"eucledianDistanceDigging: "+eucledianDistanceDigging.toFixed(2)+"<br>"
-		+"manhattanDistanceDigging: "+manhattanDistanceDigging+"<br>"
-		+"eucledianDistanceWalking: "+eucledianDistanceWalking.toFixed(2)+"<br>"
-		+"manhattanDistanceWalking: "+manhattanDistanceWalking+"<br>"
-		+"eucledianDistanceCarried: "+eucledianDistanceCarried.toFixed(2)+"<br>"
-		+"manhattanDistanceCarried: "+manhattanDistanceCarried+"<br>"
-		+"<br>"
-		+"mouseX: "+mouseX+"<br>"
+		"mouseX: "+mouseX+"<br>"
 		+"mouseY: "+mouseY+"<br>"
 		+"gridWidth: "+gridWidth+"<br>"
 		+"gridHeight: "+gridHeight+"<br>"
@@ -548,4 +552,8 @@ function resetDebug() {
 	var shareString = currUrl+"?mapX="+mapX+"&mapY="+mapY+"&zoomLevel="+zoomLevel+"&path="+currPathString;
 	document.getElementById(shareStringId).innerHTML = shareString;
 	document.getElementById(shareStringId).href = shareString;
+}
+
+function setElementInner(elementName, elementValue) {
+	document.getElementById(elementName).innerHTML = elementValue;
 }
