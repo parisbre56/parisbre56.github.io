@@ -145,6 +145,7 @@ function setupImg() {
 		if(loadString != null && loadString.length > 1 && !isNaN(Number(loadString))) {
 			zoomLevel = Number(loadString);
 		}
+		showImage();
 	}
 	mapImg.src=imagePath;
 }
