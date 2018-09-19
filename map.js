@@ -57,7 +57,7 @@ var currMapHeight = null;
 
 //How zoomed out the map currently is
 var zoomLevel = 8;
-var minZoom = 1;
+var minZoom = 1/Math.pow(2,3);
 var maxZoom = 8;
 
 //The current position of the map
@@ -209,22 +209,32 @@ function drawPath(context) {
 function zoomIn() {
 	if(zoomLevel <= minZoom)
 		return;
-	var nextMapWidth = mapWidth/(zoomLevel-1);
-	var nextMapHeight = mapHeight/(zoomLevel-1);
-	mapX = (((mapX-Math.min(currMapWidth,lensWidth)/2)*zoomLevel)/(zoomLevel-1))+(Math.min(nextMapWidth,lensWidth)/2);
-	mapY = (((mapY-Math.min(currMapHeight,lensHeight)/2)*zoomLevel)/(zoomLevel-1))+(Math.min(nextMapHeight,lensHeight)/2);
-	zoomLevel = Math.max(minZoom, zoomLevel - 1);
+	var nextZoomLevel;
+	if(zoomLevel <= 1)
+		nextZoomLevel = zoomLevel/2;
+	else
+		nextZoomLevel = zoomLevel - 1;
+	var nextMapWidth = mapWidth/nextZoomLevel;
+	var nextMapHeight = mapHeight/nextZoomLevel;
+	mapX = (((mapX-Math.min(currMapWidth,lensWidth)/2)*zoomLevel)/nextZoomLevel)+(Math.min(nextMapWidth,lensWidth)/2);
+	mapY = (((mapY-Math.min(currMapHeight,lensHeight)/2)*zoomLevel)/nextZoomLevel)+(Math.min(nextMapHeight,lensHeight)/2);
+	zoomLevel = nextZoomLevel;
 	showImage();
 }
 
 function zoomOut() {
 	if(zoomLevel >= maxZoom)
 		return;
-	var nextMapWidth = mapWidth/(zoomLevel+1);
-	var nextMapHeight = mapHeight/(zoomLevel+1);
-	mapX = (((mapX-Math.min(currMapWidth,lensWidth)/2)*zoomLevel)/(zoomLevel+1))+(Math.min(nextMapWidth,lensWidth)/2);
-	mapY = (((mapY-Math.min(currMapHeight,lensHeight)/2)*zoomLevel)/(zoomLevel+1))+(Math.min(nextMapHeight,lensHeight)/2);
-	zoomLevel = Math.min(maxZoom, zoomLevel + 1);
+	var nextZoomLevel;
+	if(zoomLevel < 1)
+		nextZoomLevel = zoomLevel * 2;
+	else
+		nextZoomLevel = zoomLevel + 1;
+	var nextMapWidth = mapWidth/nextZoomLevel;
+	var nextMapHeight = mapHeight/nextZoomLevel;
+	mapX = (((mapX-Math.min(currMapWidth,lensWidth)/2)*zoomLevel)/nextZoomLevel)+(Math.min(nextMapWidth,lensWidth)/2);
+	mapY = (((mapY-Math.min(currMapHeight,lensHeight)/2)*zoomLevel)/nextZoomLevel)+(Math.min(nextMapHeight,lensHeight)/2);
+	zoomLevel = nextZoomLevel;
 	showImage();
 }
 
