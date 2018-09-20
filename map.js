@@ -561,7 +561,7 @@ function resetDebug() {
 		currPathString = currPathString + selectedPath[0].x + "!" + selectedPath[0].y + "!" + selectedPath[0].f;
 		for(i = 1; i < selectedPath.length; ++i) {
 			var currPoint = selectedPath[i];
-			currPathString = currPathString + "," + currPoint.x + "!" + currPoint.y + "!" + currPoint.f;
+			currPathString = currPathString + ", " + currPoint.x + "!" + currPoint.y + "!" + currPoint.f;
 		}
 	}
 	var shareString = currUrl+"?mapX="+mapX+"&mapY="+mapY+"&zoomLevel="+zoomLevel+"&path="+currPathString;
