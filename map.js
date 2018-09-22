@@ -127,7 +127,7 @@ var terrains = [
 	["#31ee00","Fungal"],
 	["#b67800","Bacterial"],
 	["#fa00a1","Giant Worm tunnel"],
-	["#1a2100","Non-Antediluvian Ruins"],
+	["#182000","Non-Antediluvian Ruins"],
 	["#993400","Fault"],
 	["#e0a800","Town/Text"]
 ];
