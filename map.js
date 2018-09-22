@@ -122,7 +122,7 @@ var terrains = [
 	["#000bfa","Lake or River"],
 	["#b2b2b2","Manufactured Tunnel"],
 	["#ffe920","Messenger Path"],
-	["#3c37ff","Tombs and Shrines"]
+	["#3c37ff","Tombs and Shrines"],
 	["#99005d","Cist entombed tunnels"],
 	["#31ee00","Fungal"],
 	["#b67800","Bacterial"],
