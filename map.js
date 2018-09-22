@@ -111,11 +111,25 @@ var terrainType = 'Not Recognized';
 //Information about terrain
 var terrains = [
 	["#000000","Unknown"],
-	["#b10c00","Volcanic - Warm"],
+	["#750c00","Volcanic - Warm"],
 	["#e61800","Volcanic - Hot"],
 	["#ff4f04","Volcanic - Scorching"],
 	["#565656","Cavern"],
-	["#202020","Cold Magma Path"]
+	["#202020","Cold Magma Path"],
+	["#9deeff","Damp Cavern"],
+	["#14c9ff","Moist Cavern"],
+	["#006da1","Wet Cavern"],
+	["#000bfa","Lake or River"],
+	["#b2b2b2","Manufactured Tunnel"],
+	["#ffe920","Messenger Path"],
+	["#3c37ff","Tombs and Shrines"]
+	["#99005d","Cist entombed tunnels"],
+	["#31ee00","Fungal"],
+	["#b67800","Bacterial"],
+	["#fa00a1","Giant Worm tunnel"],
+	["#1a2100","Non-Antediluvian Ruins"],
+	["#993400","Fault"],
+	["#e0a800","Town/Text"]
 ];
 
 var terrainMap = new Map(terrains);
