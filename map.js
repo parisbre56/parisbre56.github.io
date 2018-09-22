@@ -355,7 +355,7 @@ function updatePointer(pos) {
 }
 
 function getTerrain(tPosX, tPosY) {
-	posColor = colorAtPos(tPosX, tPosY);
+	posColor = getColorAtPos(tPosX, tPosY);
 	return terrainMap.get(posColor);
 }
 
