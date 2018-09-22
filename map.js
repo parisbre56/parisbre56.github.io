@@ -104,6 +104,22 @@ var selectedPath = [];
 //index of grid point selected for moving
 var selForMove = null;
 
+//type of terrain at currently selected position
+var posColor = null;
+var terrainType = 'Not Recognized';
+
+//Information about terrain
+var terrains = [
+	["#000000","Unknown"],
+	["#b10c00","Volcanic - Warm"],
+	["#e61800","Volcanic - Hot"],
+	["#ff4f04","Volcanic - Scorching"],
+	["#565656","Cavern"],
+	["#202020","Cold Magma Path"]
+];
+
+var terrainMap = new Map(terrains);
+
 function setupImg() {
 	mapImg = document.createElement('img');
 	mapImg.onload = function() {
@@ -332,7 +348,23 @@ function updatePointer(pos) {
 	gridX = posXToGridX(mouseX);
 	gridY = posYToGridY(mouseY);
 	measureDistance();
+	terrainType = getTerrain(mouseX,mouseY);
+	if(terrainType == null)
+		terrainType = "Not Recognized";
 	resetDebug();
+}
+
+function getTerrain(tPosX, tPosY) {
+	posColor = colorAtPos(tPosX, tPosY);
+	return terrainMap.get(posColor);
+}
+
+function getColorAtPos(tPosX, tPosY) {
+	var lens = document.getElementById(lensId);
+	var c = lens.getContext('2d');
+	var p = c.getImageData(tPosX, tPosY, 1, 1).data; 
+    	var hex = "#" + ("000000" + rgbToHex(p[0], p[1], p[2])).slice(-6);
+	return hex;
 }
 
 function pointerStore(e) {
@@ -461,6 +493,7 @@ function getCursorPos(e) {
 function resetDebug() {
 	setElementInner("gridX", gridX);
 	setElementInner("gridY", gridY);
+	setElementInner("terrainType", terrainType);
 	setElementInner("storedGridX", storedGridX);
 	setElementInner("storedGridY", storedGridY);
 	setElementInner("distanceX", distanceX);
@@ -527,6 +560,7 @@ function resetDebug() {
 	var debugString = 
 		"mouseX: "+mouseX+"<br>"
 		+"mouseY: "+mouseY+"<br>"
+		+"posColor: "+posColor+"<br>"
 		+"gridWidth: "+gridWidth+"<br>"
 		+"gridHeight: "+gridHeight+"<br>"
 		+"pixelXOffset: "+pixelXOffset+"<br>"
