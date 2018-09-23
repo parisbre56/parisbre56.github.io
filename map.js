@@ -136,8 +136,13 @@ var terrains = [
 	["#993400","Fault"],
 	["#e0a800","Town/Text"]
 ];
+var reverseTerrains = [];
+for(var tt = 0; tt < terrains; tt++) {
+	reverseTerrains.push([terrains[tt][1], terrains[tt][0]]);
+}
 
 var terrainMap = new Map(terrains);
+var reverseTerrainMap = new Map(reverseTerrains);
 
 function setupImg() {
 	mapImg = document.createElement('img');
@@ -239,9 +244,43 @@ function showImage() {
 	context.clearRect(0, 0, lensWidth, lensHeight);
 	context.drawImage(mapImg,displayMapX,displayMapY,currMapWidth,currMapHeight);
 	
+	highlightImage(lens,highlightText);
+	
 	drawPath(context);
 	
 	resetDebug();
+}
+
+function highlightImage(lens,selText) {
+	var context = lens.getContext('2d');
+	
+	if(selText == 'None')
+		return;
+	var selTerrain = null;
+	if(selText != 'Not Recognized')
+		selTerrain = selText;
+	
+	for(var x=0; x < lens.width; x++) {
+		for(var y=0; y < lens.width; y++) {
+			var p = c.getImageData(x, y, 1, 1).data;
+			var hex = "#" + ("000000" + rgbToHex(p[0], p[1], p[2])).slice(-6);
+			var tempTerrain = terrainMap.get(hex);
+			if(selTerrain == tempTerrain) {
+				if(p[0] >= 127)
+					p[0] = p[0] - 127;
+				else
+					p[0] = p[0] + 127;
+				if(p[1] >= 127)
+					p[1] = p[1] - 127;
+				else
+					p[1] = p[1] + 127;
+				if(p[2] >= 127)
+					p[2] = p[2] - 127;
+				else
+					p[2] = p[2] + 127;
+			}
+		}
+	}
 }
 
 function colorForCost(cost) {
@@ -395,7 +434,7 @@ function getColorAtPos(tPosX, tPosY) {
 	var lens = document.getElementById(lensId);
 	var c = lens.getContext('2d');
 	var p = c.getImageData(tPosX, tPosY, 1, 1).data; 
-    	var hex = "#" + ("000000" + rgbToHex(p[0], p[1], p[2])).slice(-6);
+    var hex = "#" + ("000000" + rgbToHex(p[0], p[1], p[2])).slice(-6);
 	return hex;
 }
 
