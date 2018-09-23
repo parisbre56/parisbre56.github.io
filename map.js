@@ -110,6 +110,9 @@ var selForMove = null;
 var posColor = null;
 var terrainType = 'Not Recognized';
 
+//what to highlight
+var highlightText = 'None';
+
 //Information about terrain
 var terrains = [
 	["#000000","Unknown"],
@@ -275,6 +278,12 @@ function drawPath(context) {
 		context.lineTo(gridXToPosX(currPoint.x), gridYToPosY(currPoint.y));
 		context.stroke();
 	}
+}
+
+function setHighlight() {
+	var selElement = document.getElementById(highlightSelectId);
+	highlightText = selElement.options[e.selectedIndex].text;
+	showImage();
 }
 
 function zoomIn() {
@@ -609,6 +618,7 @@ function resetDebug() {
 		+"mapY: "+mapY+"<br>"
 		+"displayMapX: "+displayMapX+"<br>"
 		+"displayMapY: "+displayMapY+"<br>"
+		+"highlightText: "+highlightText+"<br>
 		+"<br>"
 		+"Path (gridX, gridY, fuelCost):<br>";
 	for(i = 0; i < selectedPath.length; ++i) {
