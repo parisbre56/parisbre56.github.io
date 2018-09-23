@@ -370,28 +370,48 @@ function zoomOut() {
 function right() {
 	if(mapX <= mapXMin)
 		return;
-	mapX = mapX-100;
+	
+	if(mapX-100 >= 0)
+		mapX = -100;
+	else
+		mapX = mapX-100;
+	
 	showImage();
 }
 
 function left() {
 	if(mapX >= 0)
 		return;
-	mapX = mapX+100;
+	
+	if(mapX+100 <= mapXMin)
+		mapX = mapXMin+100;
+	else
+		mapX = mapX+100;
+	
 	showImage();
 }
 
 function up() {
 	if(mapY >= 0)
 		return;
-	mapY = mapY+100;
+	
+	if(mapY+100 <= mapYMin)
+		mapY = mapYMin+100;
+	else
+		mapY = mapY+100;
+	
 	showImage();
 }
 
 function down() {
 	if(mapY <= mapYMin)
 		return;
-	mapY = mapY-100;
+	
+	if(mapY-100 >= 0)
+		mapY = -100;
+	else
+		mapY = mapY-100;
+	
 	showImage();
 }
 
