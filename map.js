@@ -321,7 +321,7 @@ function drawPath(context) {
 
 function setHighlight() {
 	var selElement = document.getElementById(highlightSelectId);
-	highlightText = selElement.options[e.selectedIndex].text;
+	highlightText = selElement.options[selElement.selectedIndex].text;
 	showImage();
 }
 
