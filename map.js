@@ -657,7 +657,7 @@ function resetDebug() {
 		+"mapY: "+mapY+"<br>"
 		+"displayMapX: "+displayMapX+"<br>"
 		+"displayMapY: "+displayMapY+"<br>"
-		+"highlightText: "+highlightText+"<br>
+		+"highlightText: "+highlightText+"<br>"
 		+"<br>"
 		+"Path (gridX, gridY, fuelCost):<br>";
 	for(i = 0; i < selectedPath.length; ++i) {
