@@ -29,6 +29,8 @@ var lensHeight = 600;
 var lensId = 'mapImg';
 var shareStringId = 'shareString';
 
+var highlightSelectId = 'highlightSelect';
+
 var debugContainerId = 'debugContainer';
 
 var moveTypeDiggingId = 'moveTypeDigging';
@@ -177,6 +179,13 @@ function setupImg() {
 		console.log("Loading zoomLevel [loadString="+loadString+"]");
 		if(loadString != null && loadString.length > 0 && !isNaN(Number(loadString))) {
 			zoomLevel = Number(loadString);
+		}
+		
+		var selElement = document.getElementById(highlightSelectId);
+		for(var i = 0; i < terrains.length; ++i) {
+			var optionElement = document.createElement('option');
+			optionElement.text = terrains[i][1];
+			selElement.appendChild(optionElement);
 		}
 		
 		showImage();
