@@ -112,6 +112,8 @@ var terrainType = 'Not Recognized';
 
 //what to highlight
 var highlightText = 'None';
+var doHighlight = true;
+var highlightIntervalMs = 2000;
 
 //Information about terrain
 var terrains = [
@@ -196,9 +198,16 @@ function setupImg() {
 			selElement.appendChild(optionElement);
 		}
 		
+		setInterval(highlightIntervalFun,highlightIntervalMs);
+		
 		showImage();
 	}
 	mapImg.src=imagePath;
+}
+
+function highlightIntervalFun() {
+	doHighlight = !doHighlight;
+	showImage();
 }
 
 function getParameterByName(name, url) {
@@ -244,7 +253,8 @@ function showImage() {
 	context.clearRect(0, 0, lensWidth, lensHeight);
 	context.drawImage(mapImg,displayMapX,displayMapY,currMapWidth,currMapHeight);
 	
-	highlightImage(lens,highlightText);
+	if(doHighlight)
+		highlightImage(lens,highlightText);
 	
 	drawPath(context);
 	
