@@ -260,27 +260,27 @@ function highlightImage(lens,selText) {
 	if(selText != 'Not Recognized')
 		selTerrain = selText;
 	
-	for(var x=0; x < lens.width; x++) {
-		for(var y=0; y < lens.height; y++) {
-			var p = context.getImageData(x, y, 1, 1).data;
-			var hex = "#" + ("000000" + rgbToHex(p[0], p[1], p[2])).slice(-6);
-			var tempTerrain = terrainMap.get(hex);
-			if(selTerrain == tempTerrain) {
-				if(p[0] >= 127)
-					p[0] = p[0] - 127;
-				else
-					p[0] = p[0] + 127;
-				if(p[1] >= 127)
-					p[1] = p[1] - 127;
-				else
-					p[1] = p[1] + 127;
-				if(p[2] >= 127)
-					p[2] = p[2] - 127;
-				else
-					p[2] = p[2] + 127;
-			}
+	var imageData = context.getImageData(0, 0, lens.width, lens.height);
+	var p = imageData.data;
+	for(var i=0; i < p.length; i=i+4) {
+		var hex = "#" + ("000000" + rgbToHex(p[i], p[i+1], p[i+2])).slice(-6);
+		var tempTerrain = terrainMap.get(hex);
+		if(selTerrain == tempTerrain) {
+			if(p[i] >= 127)
+				p[i] = p[i] - 127;
+			else
+				p[i] = p[i] + 127;
+			if(p[i+1] >= 127)
+				p[i+1] = p[i+1] - 127;
+			else
+				p[i+1] = p[i+1] + 127;
+			if(p[i+2] >= 127)
+				p[i+2] = p[i+2] - 127;
+			else
+				p[i+2] = p[i+2] + 127;
 		}
 	}
+	context.putImageData(imageData,0,0);
 }
 
 function colorForCost(cost) {
