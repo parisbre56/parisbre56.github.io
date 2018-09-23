@@ -68,6 +68,10 @@ button {
 	</form> 
 	
 	<button type="button" onclick="popPath()">Remove last point</button>
+	<label for="highlightSelect">Highlight:</label>
+	<select id="highlightSelect">
+		<option>Not Recognized</option>
+	</select>
 	
 	<form id="clickForm">
 		<input type="radio" name="clickType" value="add" id="clickTypeAdd" checked><label for="clickTypeAdd">Clicking adds a point to the path</label><br>
@@ -85,7 +89,7 @@ button {
 		<tr><th onclick="alert('Stored grid position. Click map to store.')">Stored</th><td><span id="storedGridX"></span>, <span id="storedGridY"></span></td></tr>
 		<tr><th onclick="alert('Distance in the horizontal and vertical axis between stored and current grid position.')">Distance</th><td><span id="distanceX"></span>, <span id="distanceY"></span></td></tr>
 		<tr><th onclick="alert('Distance is the sum of horizontal and vertical distance between stored and current grid position.')">Manhattan Distance</th><td id="manhattanDistance"></td></tr>
-		<tr onclick="alert('Distance is measured normally between stored and current grid position.')"><th>Euclidean Distance</th><td id="euclideanDistance"></td></tr>
+		<tr><th onclick="alert('Distance is measured normally between stored and current grid position.')">Euclidean Distance</th><td id="euclideanDistance"></td></tr>
 		<tr><th onclick="alert('The index of the point currently selected for move or null if none is selected.')">Selected</th><td id="selForMove"></td></tr>
 	</table>
 </div>
