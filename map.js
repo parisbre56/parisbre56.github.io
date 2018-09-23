@@ -262,7 +262,7 @@ function highlightImage(lens,selText) {
 	
 	for(var x=0; x < lens.width; x++) {
 		for(var y=0; y < lens.width; y++) {
-			var p = c.getImageData(x, y, 1, 1).data;
+			var p = context.getImageData(x, y, 1, 1).data;
 			var hex = "#" + ("000000" + rgbToHex(p[0], p[1], p[2])).slice(-6);
 			var tempTerrain = terrainMap.get(hex);
 			if(selTerrain == tempTerrain) {
