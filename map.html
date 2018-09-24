@@ -68,10 +68,19 @@ button {
 	</form> 
 	
 	<button type="button" onclick="popPath()">Remove last point</button>
+	<button type="button" onclick="resetPath()">Reset path</button>
 	<label for="highlightSelect">Highlight:</label>
 	<select id="highlightSelect" onchange="setHighlight()">
-		<option>None</option>
-		<option>Not Recognized</option>
+		<optgroup id="Special" label="Special">
+			<option value="Special" label="Special: None" selected>None</option>
+		</optgroup>
+		<optgroup id="Terrain" label="Terrain">
+			<option value="Terrain" label="Terrain: Not Recognized">Not Recognized</option>
+		</optgroup>
+		<optgroup id="Type" label="Type">
+		</optgroup>
+		<optgroup id="POI" label="POI">
+		</optgroup>
 	</select>
 	
 	<form id="clickForm">
@@ -87,6 +96,7 @@ button {
 	<table>
 		<tr><th onclick="alert('Current grid position. Use mouse pointer to point or touch and drag if using a mobile device.')">Current</th><td><span id="gridX"></span>, <span id="gridY"></span></td></tr>
 		<tr><th onclick="alert('Terrain type at location. This is predicted based on pixel color at location, so it might not be totally accurate.')">Terrain</th><td id="terrainType"></td></tr>
+		<tr><th onclick="alert('Point of Interest in location. Based on manually entered data.')">POI</th><td id="poiText"></td></tr>
 		<tr><th onclick="alert('Stored grid position. Click map to store.')">Stored</th><td><span id="storedGridX"></span>, <span id="storedGridY"></span></td></tr>
 		<tr><th onclick="alert('Distance in the horizontal and vertical axis between stored and current grid position.')">Distance</th><td><span id="distanceX"></span>, <span id="distanceY"></span></td></tr>
 		<tr><th onclick="alert('Distance is the sum of horizontal and vertical distance between stored and current grid position.')">Manhattan Distance</th><td id="manhattanDistance"></td></tr>
