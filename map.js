@@ -157,25 +157,122 @@ var reverseTerrainMap = new Map(reverseTerrains);
 
 //Information about POIs
 var poiData = [
+	["Amber", {types: ['Molemen','Settlement'], coords: [
+		{x:184 , y:4 , width:4 , height:3 , terrains: null}
+	]}],
 	["Anvil", {types: ['Human','Settlement'], coords: [
 		{x:168 , y:7 , width:1 , height:1 , terrains: null},
 		{x:169 , y:6 , width:2 , height:1 , terrains: null}
 	]}],
-	["Chamel", {types: ['Ethral','Settlement'], coords: [
+	["Bythos", {types: ['Shluck','Settlement'], coords: [
+		{x:283, y:55, width: 3, height: 1, terrains: null}
+	]}],
+	["Chamel", {types: ['Ethral','Settlement','The Eastern Archive'], coords: [
 		{x:162 , y:25 , width:2 , height:1 , terrains: null},
 		{x:163 , y:26 , width:1 , height:1 , terrains: null}
+	]}],
+	["Chime", {types: ['Corven','Settlement'], coords: [
+		{x:264, y:34, width: 3, height: 1, terrains: null},
+		{x:264, y:35, width: 1, height: 1, terrains: null}
+	]}],
+	["Distance", {types: ['Molemen','Settlement'], coords: [
+		{x:242 , y:4 , width:4 , height:3 , terrains: null}
+	]}],
+	["Dobble", {types: ['Shluck','Settlement'], coords: [
+		{x:189, y:17, width: 5, height: 1, terrains: null}
+	]}],
+	["Eclipse", {types: ['Human','Settlement'], coords: [
+		{x:193, y:56, width: 4, height: 1, terrains: null}
+	]}],
+	["Empyrean", {types: ['Human','Settlement'], coords: [
+		{x:209, y:31, width: 6, height: 1, terrains: null}
+	]}],
+	["Flow Overlook", {types: ['Molemen','Settlement'], coords: [
+		{x:277 , y:45 , width:4 , height:3 , terrains: null}
+	]}],
+	["Galway", {types: ['Corven','Settlement'], coords: [
+		{x:204, y:7, width: 2, height: 1, terrains: null},
+		{x:205, y:8, width: 1, height: 1, terrains: null},
+	]}],
+	["Goldshore", {types: ['Corven','Settlement'], coords: [
+		{x:288, y:39, width: 3, height: 1, terrains: null},
+		{x:289, y:38, width: 1, height: 1, terrains: null}
+	]}],
+	["Hearth", {types: ['Ethral','Settlement'], coords: [
+		{x:286 , y:9 , width:2 , height:1 , terrains: null},
+		{x:285 , y:10 , width:3 , height:1 , terrains: null}
+	]}],
+	["Kirk", {types: ['Corven','Settlement'], coords: [
+		{x:179, y:34, width: 3, height: 1, terrains: null}
+	]}],
+	["Knot", {types: ['Ethral','Settlement'], coords: [
+		{x:248, y:37, width: 1, height: 1, terrains: null},
+		{x:249, y:36, width: 2, height: 1, terrains: null}
+	]}],
+	["Liri", {types: ['Ethral','Settlement'], coords: [
+		{x:212, y:4, width: 2, height: 1, terrains: null},
+		{x:213, y:3, width: 1, height: 1, terrains: null}
 	]}],
 	["Mason", {types: ['Human','Settlement'], coords: [
 		{x:168, y:19, width: 1, height: 1, terrains: null},
 		{x:170, y:18, width: 2, height: 1, terrains: null}
+	]}],
+	["Mistcliff", {types: ['Molemen','Settlement'], coords: [
+		{x:168 , y:49 , width:4 , height:3 , terrains: null}
+	]}],
+	["Quiet Grind", {types: ['Molemen','Settlement'], coords: [
+		{x:213 , y:21 , width:4 , height:3 , terrains: null}
+	]}],
+	["Roar", {types: ['Human','Settlement'], coords: [
+		{x:276, y:13, width: 2, height: 1, terrains: null}
 	]}],
 	["Saltslanding", {types: ['Shluck','Settlement'], coords: [
 		{x:235, y:65, width: 2, height: 1, terrains: null},
 		{x:233, y:66, width: 3, height: 1, terrains: null},
 		{x:236, y:67, width: 3, height: 1, terrains: null}
 	]}],
-	["West Twin River", {types: ['River'], coords: [
+	["Twin Falls", {types: ['Human','Settlement'], coords: [
+		{x:236, y:26, width: 1, height: 1, terrains: null},
+		{x:237, y:27, width: 2, height: 1, terrains: null},
+		{x:242, y:27, width: 1, height: 1, terrains: null}
+	]}],
+	["Undertow", {types: ['Shluck','Settlement'], coords: [
+		{x:182, y:37, width: 2, height: 1, terrains: null}
+	]}],
+	["Providence River", {types: ['River'], coords: [
+		{x:136 , y:1 , width:74 , height:101 , terrains: ['Water Source/Lake or River']},
+		{x:167 , y:46 , width:1 , height:7 , terrains: null}
+	]}],
+	["West Twin River", {types: ['River','Twin Rivers'], coords: [
 		{x:220, y:1, width:33, height: 103, terrains: ['Water Source/Lake or River']}
+	]}],
+	["East Twin River", {types: ['River','Twin Rivers'], coords: [
+		{x:258, y:1, width:38, height: 60, terrains: ['Water Source/Lake or River']}
+	]}],
+	["Faith's Needle", {types: ['Messenger Path and Complex'], coords: [
+		{x:199 , y:53 , width:21 , height:25 , terrains: ['Messenger Path','Tombs and Shrines','Cist entombed tunnels']}
+	]}],
+	["Fathomless Falls", {types: ['Waterfalls'], coords: [
+		{x:167 , y:46 , width:1 , height:7 , terrains: null}
+	]}],
+	["Fire's Blessing", {types: ['Messenger Path and Complex'], coords: [
+		{x:255 , y:48 , width:23 , height:34 , terrains: ['Messenger Path','Tombs and Shrines','Cist entombed tunnels']}
+	]}],
+	["God's Breath Caverns", {types: ['Caverns'], coords: [
+		{x:186 , y:32 , width:29 , height:22 , terrains: ['Cavern']}
+	]}],
+	["Molten Heart", {types: ['Magma Source'], coords: [
+		{x:193 , y:89 , width:24 , height:9 , terrains: ['Volcanic - Scorching']}
+	]}],
+	["Spore Wood", {types: ['Fungal Forests'], coords: [
+		{x:177 , y:41 , width:13 , height:13 , terrains: ["Fungal"]}
+	]}],
+	["Sulfurous Maze", {types: ['Bacterial Cave Complex'], coords: [
+		{x:223 , y:1 , width:22 , height:22 , terrains: ["Bacterial","Non-Antediluvian Ruins"]}
+	]}],
+	["Vortex", {types: ['Caverns'], coords: [
+		{x:249 , y:19 , width:16 , height:10 , terrains: ["Slightly Wet Cavern","Wet Cavern","Very Wet Cavern"]},
+		{x:261 , y:29 , width:4 , height:3 , terrains: ["Slightly Wet Cavern","Wet Cavern","Very Wet Cavern"]}
 	]}],
 	["1st Expedition Site", {types: ['Ruins', 'Gemstone People'], coords: [
 		{x:162, y:19, width:2, height:2, terrains: null}
@@ -246,6 +343,16 @@ function setupImg() {
 		console.log("Loading zoomLevel [loadString="+loadString+"]");
 		if(loadString != null && loadString.length > 0 && !isNaN(Number(loadString))) {
 			zoomLevel = Number(loadString);
+		}
+		loadString = getParameterByName("highlightValue");
+		console.log("Loading highlightValue [loadString="+loadString+"]");
+		if(loadString != null && loadString.length > 0) {
+			highlightValue = loadString;
+		}
+		loadString = getParameterByName("highlightText");
+		console.log("Loading highlightText [loadString="+loadString+"]");
+		if(loadString != null && loadString.length > 0) {
+			highlightText = loadString;
 		}
 		
 		for(var i = 0; i < terrains.length; ++i) {
@@ -927,7 +1034,13 @@ function resetDebug() {
 			currPathString = currPathString + ", " + currPoint.x + "!" + currPoint.y + "!" + currPoint.f;
 		}
 	}
-	var shareString = currUrl+"?mapX="+mapX+"&mapY="+mapY+"&zoomLevel="+zoomLevel+"&path="+currPathString;
+	var shareString = currUrl
+		+"?mapX="+mapX
+		+"&mapY="+mapY
+		+"&zoomLevel="+zoomLevel
+		+"&highlightValue="+highlightValue
+		+"&highlightText="+highlightText
+		+"&path="+currPathString;
 	document.getElementById(shareStringId).innerHTML = shareString;
 	document.getElementById(shareStringId).href = shareString;
 }
