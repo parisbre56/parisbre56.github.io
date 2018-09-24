@@ -313,7 +313,7 @@ function showImage() {
 	
 	currMapWidth = mapWidth/zoomLevel;
 	currMapHeight = mapHeight/zoomLevel;
-	lensWidth = Math.min(window.innerWidth, maxLensWidth);;
+	lensWidth = Math.min(window.innerWidth, maxLensWidth);
 	lensHeight = Math.min(window.innerHeight, maxLensHeight);
 	mapXMin = Math.min(0,-(currMapWidth-lensWidth));
 	mapYMin = Math.min(0,-(currMapHeight-lensHeight));
@@ -322,7 +322,7 @@ function showImage() {
 	
 	var lens = document.getElementById(lensId);
 	lens.width = lensWidth;
-	lens.height = lensWidth;
+	lens.height = lensHeight;
 	
 	var context = lens.getContext('2d');
 	context.clearRect(0, 0, lensWidth, lensHeight);
@@ -381,6 +381,12 @@ function highlightImage(lens,selText,selValue) {
 			//Do not show if out of bounds
 			if(translatedX+translatedWidth < 0 || translatedY+translatedHeight < 0)
 				continue;
+			
+			//Limit area to improve performance
+			translatedX = Math.max(translatedX,0);
+			translatedY = Math.max(translatedY,0);
+			translatedWidth = Math.min(translatedX+translatedWidth,lensWidth)-translatedX;
+			translatedHeight = Math.min(translatedY+translatedHeight,lensHeight)-translatedY;
 			
 			var imageData = context.getImageData(translatedX, translatedY, translatedWidth, translatedHeight);
 			var p = imageData.data;
