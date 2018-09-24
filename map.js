@@ -30,6 +30,10 @@ var lensId = 'mapImg';
 var shareStringId = 'shareString';
 
 var highlightSelectId = 'highlightSelect';
+var highlightSpecialValue = 'Special';
+var highlightTerrainValue = 'Terrain';
+var highlightTypeValue = 'Type';
+var highlightPOIValue = 'POI';
 
 var debugContainerId = 'debugContainer';
 
@@ -110,8 +114,12 @@ var selForMove = null;
 var posColor = null;
 var terrainType = 'Not Recognized';
 
+//poi text at currently selected position
+var poiText = '';
+
 //what to highlight
 var highlightText = 'None';
+var highlightValue = 'Special';
 var doHighlight = true;
 var highlightIntervalMs = 2000;
 
@@ -145,6 +153,49 @@ for(var tt = 0; tt < terrains; tt++) {
 
 var terrainMap = new Map(terrains);
 var reverseTerrainMap = new Map(reverseTerrains);
+
+//Information about POIs
+var poiData = [
+	["Anvil", {types: ['Human','Settlement'], coords: [
+		{x:168 , y:7 , width:1 , height:1 , terrains: null},
+		{x:169 , y:6 , width:2 , height:1 , terrains: null}
+	]}],
+	["Chamel", {types: ['Ethral','Settlement'], coords: [
+		{x:162 , y:25 , width:2 , height:1 , terrains: null},
+		{x:163 , y:26 , width:1 , height:1 , terrains: null}
+	]}],
+	["Mason", {types: ['Human','Settlement'], coords: [
+		{x:168, y:19, width: 1, height: 1, terrains: null},
+		{x:170, y:18, width: 2, height: 1, terrains: null}
+	]}],
+	["West Twin River", {types: ['River'], coords: [
+		{x:220, y:1, width:33, height: 103, terrains: ['Water Source/Lake or River']}
+	]}],
+	["1st Expedition Site", {types: ['Ruins', 'Gemstone People'], coords: [
+		{x:162, y:19, width:2, height:2, terrains: null}
+	]}]
+]
+var poiMap = new Map(poiData);
+
+//Information about types of POIs
+var typeMap = new Map([]);
+for(var tt = 0; tt < poiData.length; tt++) {
+	var tPoiData = poiData[tt][1];
+	var tTypes = tPoiData.types;
+	var tCoords = tPoiData.coords;
+	for(var typeIndex = 0; typeIndex < tTypes.length; ++typeIndex) {
+		var tType = tTypes[typeIndex];
+		var tTypeData = typeMap.get(tType);
+		if(tTypeData == null) {
+			tTypeData = [];
+			typeMap.set(tType, tTypeData);
+		}
+		for(var coordIndex = 0; coordIndex < tCoords.length; ++coordIndex) {
+			tTypeData.push(tCoords[coordIndex]);
+		}
+	}
+}
+var typesData = Array.from(typeMap.keys());
 
 function setupImg() {
 	mapImg = document.createElement('img');
@@ -191,10 +242,28 @@ function setupImg() {
 			zoomLevel = Number(loadString);
 		}
 		
-		var selElement = document.getElementById(highlightSelectId);
 		for(var i = 0; i < terrains.length; ++i) {
+			var selElement = document.getElementById(highlightTerrainValue);
 			var optionElement = document.createElement('option');
 			optionElement.text = terrains[i][1];
+			optionElement.value = highlightTerrainValue;
+			optionElement.label = optionElement.value+": "+optionElement.text;
+			selElement.appendChild(optionElement);
+		}
+		for(var i = 0; i < typesData.length; ++i) {
+			var selElement = document.getElementById(highlightTypeValue);
+			var optionElement = document.createElement('option');
+			optionElement.text = typesData[i];
+			optionElement.value = highlightTypeValue;
+			optionElement.label = optionElement.value+": "+optionElement.text;
+			selElement.appendChild(optionElement);
+		}
+		for(var i = 0; i < poiData.length; ++i) {
+			var selElement = document.getElementById(highlightPOIValue);
+			var optionElement = document.createElement('option');
+			optionElement.text = poiData[i][0];
+			optionElement.value = highlightPOIValue;
+			optionElement.label = optionElement.value+": "+optionElement.text;
 			selElement.appendChild(optionElement);
 		}
 		
@@ -254,43 +323,91 @@ function showImage() {
 	context.drawImage(mapImg,displayMapX,displayMapY,currMapWidth,currMapHeight);
 	
 	if(doHighlight)
-		highlightImage(lens,highlightText);
+		highlightImage(lens,highlightText,highlightValue);
 	
 	drawPath(context);
 	
 	resetDebug();
 }
 
-function highlightImage(lens,selText) {
+function highlightImage(lens,selText,selValue) {
 	var context = lens.getContext('2d');
 	
 	if(selText == 'None')
 		return;
-	var selTerrain = null;
-	if(selText != 'Not Recognized')
-		selTerrain = selText;
 	
-	var imageData = context.getImageData(0, 0, lens.width, lens.height);
-	var p = imageData.data;
-	for(var i=0; i < p.length; i=i+4) {
-		var hex = "#" + ("000000" + rgbToHex(p[i], p[i+1], p[i+2])).slice(-6);
-		var tempTerrain = terrainMap.get(hex);
-		if(selTerrain == tempTerrain) {
-			if(p[i] >= 127)
-				p[i] = p[i] - 127;
-			else
-				p[i] = p[i] + 127;
-			if(p[i+1] >= 127)
-				p[i+1] = p[i+1] - 127;
-			else
-				p[i+1] = p[i+1] + 127;
-			if(p[i+2] >= 127)
-				p[i+2] = p[i+2] - 127;
-			else
-				p[i+2] = p[i+2] + 127;
+	if(selValue == highlightTerrainValue) {
+		var selTerrain = null;
+		if(selText != 'Not Recognized')
+			selTerrain = selText;
+		
+		var imageData = context.getImageData(0, 0, lens.width, lens.height);
+		var p = imageData.data;
+		for(var i=0; i < p.length; i=i+4) {
+			var hex = "#" + ("000000" + rgbToHex(p[i], p[i+1], p[i+2])).slice(-6);
+			var tempTerrain = terrainMap.get(hex);
+			if(selTerrain == tempTerrain) {
+				highlightPoint(p,i);
+			}
+		}
+		context.putImageData(imageData,0,0);
+	}
+	else if(selValue == highlightTypeValue || selValue == highlightPOIValue) {
+		var selCoords;
+		if(selValue == highlightTypeValue) {
+			selCoords = typeMap.get(selText);
+		} else {
+			selCoords = poiMap.get(selText).coords;
+		}
+		for(var cIndex = 0; cIndex < selCoords.length ; ++cIndex) {
+			var currCoord = selCoords[cIndex];
+			
+			var translatedX = gridXToPosXLeft(currCoord.x);
+			var translatedY = gridYToPosYTop(currCoord.y);
+			
+			//Do not show if out of bounds
+			if(translatedX > lens.width || translatedY > lens.height)
+				continue;
+			
+			var translatedWidth = (currCoord.width*gridWidth)/zoomLevel;
+			var translatedHeight = (currCoord.height*gridHeight)/zoomLevel;
+			
+			//Do not show if out of bounds
+			if(translatedX+translatedWidth < 0 || translatedY+translatedHeight < 0)
+				continue;
+			
+			var imageData = context.getImageData(translatedX, translatedY, translatedWidth, translatedHeight);
+			var p = imageData.data;
+			for(var i=0; i < p.length; i=i+4) {
+				var hex = "#" + ("000000" + rgbToHex(p[i], p[i+1], p[i+2])).slice(-6);
+				var tempTerrain = terrainMap.get(hex);
+				if(currCoord.terrains == null || currCoord.terrains.includes(tempTerrain)) {
+					highlightPoint(p,i);
+				}
+			}
+			context.putImageData(imageData, translatedX, translatedY);
 		}
 	}
-	context.putImageData(imageData,0,0);
+}
+
+function highlightPoint(p,i) {
+	//Set alpha to 254 as an indicator that this has already been highlighted
+	if(p[i+3] == 254)
+		return;
+	p[i+3] = 254
+	
+	if(p[i] >= 127)
+		p[i] = p[i] - 127;
+	else
+		p[i] = p[i] + 127;
+	if(p[i+1] >= 127)
+		p[i+1] = p[i+1] - 127;
+	else
+		p[i+1] = p[i+1] + 127;
+	if(p[i+2] >= 127)
+		p[i+2] = p[i+2] - 127;
+	else
+		p[i+2] = p[i+2] + 127;
 }
 
 function colorForCost(cost) {
@@ -331,7 +448,9 @@ function drawPath(context) {
 
 function setHighlight() {
 	var selElement = document.getElementById(highlightSelectId);
-	highlightText = selElement.options[selElement.selectedIndex].text;
+	var tempHighlightElement = selElement.options[selElement.selectedIndex];
+	highlightText = tempHighlightElement.text;
+	highlightValue = tempHighlightElement.value;
 	showImage();
 }
 
@@ -435,12 +554,28 @@ function gridXToPosX(posX) {
 	return ((posX-gridXStart)*gridWidth + pixelXOffset)/zoomLevel + displayMapX + gridWidth/(2*zoomLevel);
 }
 
+function gridXToPosXLeft(posX) {
+	return ((posX-gridXStart)*gridWidth + pixelXOffset)/zoomLevel + displayMapX;
+}
+
+function gridXToPosXRight(posX) {
+	return ((posX-gridXStart)*gridWidth + pixelXOffset)/zoomLevel + displayMapX + gridWidth/zoomLevel;
+}
+
 function posYToGridY(posY) {
 	return Math.trunc(gridYStart+(((posY-displayMapY) * zoomLevel)-pixelYOffset)/gridHeight);
 }
 
 function gridYToPosY(posY) {
 	return ((posY-gridYStart)*gridHeight + pixelYOffset)/zoomLevel + displayMapY + gridHeight/(2*zoomLevel);
+}
+
+function gridYToPosYTop(posY) {
+	return ((posY-gridYStart)*gridHeight + pixelYOffset)/zoomLevel + displayMapY;
+}
+
+function gridYToPosYBottom(posY) {
+	return ((posY-gridYStart)*gridHeight + pixelYOffset)/zoomLevel + displayMapY + gridHeight/zoomLevel;
 }
 
 function updatePointer(pos) {
@@ -450,9 +585,48 @@ function updatePointer(pos) {
 	gridY = posYToGridY(mouseY);
 	measureDistance();
 	terrainType = getTerrain(mouseX,mouseY);
+	var pois = getPOIs(gridX, gridY, terrainType);
 	if(terrainType == null)
 		terrainType = "Not Recognized";
+	poiText = '';
+	for(var i = 0; i < pois.length; ++i) {
+		var tPoi = pois[i];
+		var tTypes = tPoi[1].types;
+		if(i > 0) {
+			poiText = poiText + ", ";
+		}
+		poiText = poiText+tPoi[0];
+		if(tTypes != null && tTypes.length > 0) {
+			poiText = poiText + " ("+tTypes[0];
+			for(var j = 1; j < tTypes.length; ++j) {
+				poiText = poiText + ", " + tTypes[j];
+			}
+			poiText = poiText + ")";
+		}
+	}
 	resetDebug();
+}
+
+function getPOIs(tGridX, tGridY, tTerrainType) {
+	var retVal = [];
+	for(var i = 0; i < poiData.length; ++i) {
+		var tPoi = poiData[i];
+		var tCoords = tPoi[1].coords;
+		for(var j = 0; j < tCoords.length; ++j) {
+			var tCoord = tCoords[j];
+			if(tGridX >= tCoord.x 
+				&& tGridX < tCoord.x+tCoord.width
+				&& tGridY >= tCoord.y
+				&& tGridY < tCoord.y+tCoord.height
+				&& (tCoord.terrains == null 
+					|| (tTerrainType != null 
+						&& tCoord.terrains.includes(tTerrainType)))) {
+				retVal.push(tPoi);
+				break;
+			}
+		}
+	}
+	return retVal;
 }
 
 function getTerrain(tPosX, tPosY) {
@@ -576,6 +750,12 @@ function popPath() {
 	showImage();
 }
 
+function resetPath() {
+	selectedPath.length = 0; //Clears the array
+	selForMove = null;
+	showImage();
+}
+
 function measureDistance() {
 	distanceX = gridX - storedGridX;
 	distanceY = gridY - storedGridY;
@@ -601,6 +781,7 @@ function resetDebug() {
 	setElementInner("gridX", gridX);
 	setElementInner("gridY", gridY);
 	setElementInner("terrainType", terrainType);
+	setElementInner("poiText", poiText);
 	setElementInner("storedGridX", storedGridX);
 	setElementInner("storedGridY", storedGridY);
 	setElementInner("distanceX", distanceX);
@@ -688,6 +869,8 @@ function resetDebug() {
 		+"displayMapX: "+displayMapX+"<br>"
 		+"displayMapY: "+displayMapY+"<br>"
 		+"highlightText: "+highlightText+"<br>"
+		+"highlightValue: "+highlightValue+"<br>"
+		+"doHighlight: "+doHighlight+"<br>"
 		+"<br>"
 		+"Path (gridX, gridY, fuelCost):<br>";
 	for(i = 0; i < selectedPath.length; ++i) {
