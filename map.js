@@ -169,12 +169,17 @@ var poiData = [
 		{x:168, y:19, width: 1, height: 1, terrains: null},
 		{x:170, y:18, width: 2, height: 1, terrains: null}
 	]}],
+	["Saltslanding", {types: ['Shluck','Settlement'], coords: [
+		{x:235, y:65, width: 2, height: 1, terrains: null},
+		{x:233, y:66, width: 3, height: 1, terrains: null},
+		{x:236, y:67, width: 3, height: 1, terrains: null}
+	]}],
 	["West Twin River", {types: ['River'], coords: [
 		{x:220, y:1, width:33, height: 103, terrains: ['Water Source/Lake or River']}
 	]}],
 	["1st Expedition Site", {types: ['Ruins', 'Gemstone People'], coords: [
 		{x:162, y:19, width:2, height:2, terrains: null}
-	]}]
+	]}],
 ]
 var poiMap = new Map(poiData);
 
@@ -395,20 +400,40 @@ function highlightPoint(p,i) {
 	//Set alpha to 254 as an indicator that this has already been highlighted
 	if(p[i+3] == 254)
 		return;
-	p[i+3] = 254
+	p[i+3] = 254;
 	
-	if(p[i] >= 127)
-		p[i] = p[i] - 127;
+	if(p[i] > 127)
+		p[i] = p[i] - 128;
 	else
-		p[i] = p[i] + 127;
-	if(p[i+1] >= 127)
-		p[i+1] = p[i+1] - 127;
+		p[i] = p[i] + 128;
+	if(p[i+1] > 127)
+		p[i+1] = p[i+1] - 128;
 	else
-		p[i+1] = p[i+1] + 127;
-	if(p[i+2] >= 127)
-		p[i+2] = p[i+2] - 127;
+		p[i+1] = p[i+1] + 128;
+	if(p[i+2] > 127)
+		p[i+2] = p[i+2] - 128;
 	else
-		p[i+2] = p[i+2] + 127;
+		p[i+2] = p[i+2] + 128;
+}
+
+function undoHighlightPoint(p,i) {
+	//Set alpha to 255 as an indicator that this has not been highlighted
+	if(p[i+3] != 254)
+		return;
+	p[i+3] = 255;
+	
+	if(p[i] > 127)
+		p[i] = p[i] - 128;
+	else
+		p[i] = p[i] + 128;
+	if(p[i+1] > 127)
+		p[i+1] = p[i+1] - 128;
+	else
+		p[i+1] = p[i+1] + 128;
+	if(p[i+2] > 127)
+		p[i+2] = p[i+2] - 128;
+	else
+		p[i+2] = p[i+2] + 128;
 }
 
 function colorForCost(cost) {
@@ -643,6 +668,7 @@ function getColorAtPos(tPosX, tPosY) {
 	var lens = document.getElementById(lensId);
 	var c = lens.getContext('2d');
 	var p = c.getImageData(tPosX, tPosY, 1, 1).data; 
+	undoHighlightPoint(p,0);
     var hex = "#" + ("000000" + rgbToHex(p[0], p[1], p[2])).slice(-6);
 	return hex;
 }
