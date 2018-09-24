@@ -116,6 +116,7 @@ var terrainType = 'Not Recognized';
 
 //poi text at currently selected position
 var poiText = '';
+var mousePois = [];
 
 //what to highlight
 var highlightText = 'None';
@@ -584,13 +585,17 @@ function updatePointer(pos) {
 	gridX = posXToGridX(mouseX);
 	gridY = posYToGridY(mouseY);
 	measureDistance();
+	
 	terrainType = getTerrain(mouseX,mouseY);
-	var pois = getPOIs(gridX, gridY, terrainType);
+	
+	mousePois = getPOIs(gridX, gridY, terrainType);
+	
 	if(terrainType == null)
 		terrainType = "Not Recognized";
+	
 	poiText = '';
-	for(var i = 0; i < pois.length; ++i) {
-		var tPoi = pois[i];
+	for(var i = 0; i < mousePois.length; ++i) {
+		var tPoi = mousePois[i];
 		var tTypes = tPoi[1].types;
 		if(i > 0) {
 			poiText = poiText + ", ";
@@ -871,6 +876,7 @@ function resetDebug() {
 		+"highlightText: "+highlightText+"<br>"
 		+"highlightValue: "+highlightValue+"<br>"
 		+"doHighlight: "+doHighlight+"<br>"
+		+"mousePois: "+JSON.stringify(mousePois)+"<br>"
 		+"<br>"
 		+"Path (gridX, gridY, fuelCost):<br>";
 	for(i = 0; i < selectedPath.length; ++i) {
