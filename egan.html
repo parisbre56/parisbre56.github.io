@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Egan's probability checker">
+<meta name="keywords" content="Egan">
+<meta name="author" content="Parisbre56">
+
+<title>Egan Calculator</title>
+
+<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico"/>
+<link rel="icon" type="image/x-icon" href="/favicon.ico"/>
+
+<script src="egan.js"></script>
+
+<style>
+.inlineTable {
+	display: inline;
+}
+.tableBorder {
+	display: inline-block;
+	border: 5px solid;
+}
+th {
+	border: 1px solid;
+}
+td {
+	border: 1px solid;
+}
+</style>
+
+</head>
+<body onload="setupTable()">
+	<form>
+		<input type="number" id="bonus" min="-2" max="3" value="0" onchange="updateProbs()" required>
+	</form>
+	<div class="tableBorder">
+		<table id="probTableNarrow" class="inlineTable">
+		</table>
+		<table id="probTableBroad" class="inlineTable">
+		</table>
+	</div>
+	<div class="tableBorder">
+		<table id="fullTableNarrow">
+		</table>
+	</div>
+	<div class="tableBorder">
+		<table id="fullTableBroad">
+		</table>
+	</div>
+</body>
