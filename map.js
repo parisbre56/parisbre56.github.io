@@ -277,6 +277,9 @@ var poiData = [
 	["1st Expedition Site", {types: ['Ruins', 'Gemstone People'], coords: [
 		{x:162, y:19, width:2, height:2, terrains: null}
 	]}],
+	["God's Breath Giant Ant Nest", {types: ['Monster Lair', 'Giant Ants'], coords: [
+		{x:189, y:32, width:1, height:1, terrains: null}	
+	]}]
 ]
 var poiMap = new Map(poiData);
 
