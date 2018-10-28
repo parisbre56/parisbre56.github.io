@@ -279,7 +279,7 @@ var poiData = [
 	]}],
 	["God's Breath Giant Ant Nest", {types: ['Monster Lair', 'Giant Ants'], coords: [
 		{x:189, y:32, width:1, height:1, terrains: null}	
-	]}]
+	]}],
 	["God's Breath Pilgrimage Start Point", {types: ['Pilgrimage Path', 'Trade Depot'], coords: [
 		{x:187, y:33, width:1, height:1, terrains: null}	
 	]}]
