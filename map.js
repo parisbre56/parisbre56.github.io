@@ -50,7 +50,7 @@ var clickTypeAddSelId    = 'clickTypeAddSel';
 var clickTypeNopId       = 'clickTypeNop';
 
 //The location from which the map should be loaded
-var imagePath = 'Map.png';
+var imagePath = 'Map.png?v=2';
 
 //The image that will be drawn on the canvas
 var mapImg = null;
@@ -144,6 +144,7 @@ var terrains = [
 	["#b67800","Bacterial"],
 	["#fa00a1","Giant Worm tunnel"],
 	["#182000","Non-Antediluvian Ruins"],
+	["#00a9ee","Crystal People Ruins"],
 	["#993400","Fault"],
 	["#e0a800","Town/Text"]
 ];
