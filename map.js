@@ -277,6 +277,12 @@ var poiData = [
 	["1st Expedition Site", {types: ['Ruins', 'Gemstone People'], coords: [
 		{x:162, y:19, width:2, height:2, terrains: null}
 	]}],
+	["God's Breath Giant Ant Nest", {types: ['Monster Lair', 'Giant Ants'], coords: [
+		{x:189, y:32, width:1, height:1, terrains: null}	
+	]}],
+	["God's Breath Pilgrimage Start Point", {types: ['Pilgrimage Path', 'Trade Depot'], coords: [
+		{x:187, y:33, width:1, height:1, terrains: null}	
+	]}]
 ]
 var poiMap = new Map(poiData);
 
@@ -559,6 +565,37 @@ function colorForCost(cost) {
 	}
 }
 
+function offsetForPos(posIndex) {
+	var tSelPoint = selectedPath[posIndex];
+	
+	var pointsInSameGridPos = 0;
+	for(var i = 0; i < posIndex; ++i) {
+		var currPoint = selectedPath[i];
+		if(currPoint.x == tSelPoint.x && currPoint.y == tSelPoint.y) {
+			pointsInSameGridPos = pointsInSameGridPos + 1;
+		}
+	}
+	var selPos = pointsInSameGridPos % 9;
+	if(selPos == 0)
+		return {x: 0, y: 0};
+	if(selPos == 1)
+		return {x: -1, y: +1};
+	if(selPos == 2)
+		return {x: +1, y: -1};
+	if(selPos == 3)
+		return {x: -1, y: -1};
+	if(selPos == 4)
+		return {x: +1, y: +1};
+	if(selPos == 5)
+		return {x: -1, y: 0};
+	if(selPos == 6)
+		return {x: 0, y: -1};
+	if(selPos == 7)
+		return {x: +1, y: 0};
+	if(selPos == 8)
+		return {x: 0, y: +1};
+}
+
 function drawPath(context) {
 	if(selectedPath.length <= 0)
 		return;
@@ -569,7 +606,8 @@ function drawPath(context) {
 		
 		context.fillStyle = colorForCost(currPoint.f);
 		
-		context.fillRect(gridXToPosX(currPoint.x)-1, gridYToPosY(currPoint.y)-1, 3, 3);
+		var offset = offsetForPos(i);
+		context.fillRect(gridXToPosX(currPoint.x)-1+offset.x, gridYToPosY(currPoint.y)-1+offset.y, 3, 3);
 	}
 	
 	for(i = 1; i < selectedPath.length; ++i) {
@@ -578,9 +616,12 @@ function drawPath(context) {
 		
 		context.strokeStyle  = colorForCost(currPoint.f);
 		
+		var currOffset = offsetForPos(i);
+		var prevOffset = offsetForPos(i-1);
+		
 		context.beginPath();
-		context.moveTo(gridXToPosX(prevPoint.x), gridYToPosY(prevPoint.y));
-		context.lineTo(gridXToPosX(currPoint.x), gridYToPosY(currPoint.y));
+		context.moveTo(gridXToPosX(prevPoint.x)+prevOffset.x, gridYToPosY(prevPoint.y)+prevOffset.y);
+		context.lineTo(gridXToPosX(currPoint.x)+currOffset.x, gridYToPosY(currPoint.y)+currOffset.y);
 		context.stroke();
 	}
 }
