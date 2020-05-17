@@ -129,7 +129,7 @@ var terrains = [
 	["#000000","Unknown"],
 	["#750c00","Volcanic - Warm"],
 	["#e61800","Volcanic - Hot"],
-	["#ff4f04","Volcanic - Scorching"],
+	["#ff4f05","Volcanic - Scorching"],
 	["#565656","Cavern"],
 	["#202020","Cold Magma Path"],
 	["#9deeff","Slightly Wet Cavern"],
