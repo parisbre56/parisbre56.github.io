@@ -19,6 +19,15 @@
         color: #009600;
         font-size: 2rem;
     }
+    .hidden {
+        display: none;
+    }
+    input {
+        display: block;
+    }
+    textarea {
+        display: block;
+    }
 </style>
 <script>
     // Initialize and add the map
@@ -66,6 +75,7 @@
     let yellowZonePoly = null
     let center = null
     let map = null
+    let loadedPOIS = null
     let radioSystem = true
     const offset = {
         x: 10,
@@ -321,13 +331,18 @@
         const yName = (radioSystem) ? pos.y + 14 : pos.y
         return xName + ", " + yName
     }
+    function mapClick(mapsMouseEvent) {
+        document.getElementById("latLong").innerText = mapsMouseEvent.latLng
+        const poiForm = document.getElementById("poiForm");
+        poiForm.classList.remove('hidden')
+        document.getElementById("lat").value = mapsMouseEvent.latLng.lat()
+        document.getElementById("lng").value = mapsMouseEvent.latLng.lng()
+    }
     function drawHex(x, y) {
         if(hexValid(x,y)) {
             const hex = getHex(x, y);
 
-            google.maps.event.addListener(hex, "click", (mapsMouseEvent) => {
-                document.getElementById("latLong").innerText = mapsMouseEvent.latLng
-            })
+            google.maps.event.addListener(hex, "click", mapClick)
             google.maps.event.addListener(hex, 'mouseover', function (e) {
                 injectTooltip(e, hex.customCoordinates);
             });
@@ -346,6 +361,91 @@
     function hexValid(x, y) {
         return Math.abs(x) < hexLoop && Math.abs(y) < hexLoop
     }
+    function createPOIFromForm() {
+        const lat = document.getElementById("lat").value
+        const lng = document.getElementById("lng").value
+        const image = document.getElementById("image").value
+        const letter = document.getElementById("letter").value
+        const description = document.getElementById("description").value
+        createPOI(lat,lng,image,letter,description)
+    }
+    function createPOI(lat,lng,image,letter,description) {
+        const data = JSON.stringify({
+            lat: lat,
+            lng: lng,
+            image: image ? image : null,
+            letter: letter ? letter : null,
+            description: description ? description : null,
+            last_updated: new Date().toUTCString(),
+        });
+
+        const xhr = new XMLHttpRequest();
+        xhr.withCredentials = false;
+
+        xhr.addEventListener("readystatechange", function () {
+            if (this.readyState === 4) {
+                console.log(this.responseText);
+                location.reload()
+            }
+        });
+
+        xhr.open("POST", "https://detroit1map-e905.restdb.io/rest/pois");
+        xhr.setRequestHeader("content-type", "application/json");
+        xhr.setRequestHeader("x-apikey", "603ed7e0acc40f765fede369");
+        xhr.setRequestHeader("cache-control", "no-cache");
+
+        xhr.send(data);
+    }
+    function deletePOI(id) {
+        const xhr = new XMLHttpRequest();
+        xhr.withCredentials = false;
+
+        xhr.addEventListener("readystatechange", function () {
+            if (this.readyState === 4) {
+                console.log(this.responseText);
+                location.reload()
+            }
+        });
+
+        xhr.open("DELETE", "https://detroit1map-e905.restdb.io/rest/pois/"+id);
+        xhr.setRequestHeader("content-type", "application/json");
+        xhr.setRequestHeader("x-apikey", "603ed7e0acc40f765fede369");
+        xhr.setRequestHeader("cache-control", "no-cache");
+
+        xhr.send();
+    }
+    function getPOIS() {
+        const xhr = new XMLHttpRequest();
+        xhr.withCredentials = false;
+
+        xhr.addEventListener("readystatechange", function () {
+            if (this.readyState === 4) {
+                loadedPOIS = JSON.parse(this.responseText)
+                for(let poiIndex = 0; poiIndex < loadedPOIS.length; poiIndex = poiIndex + 1) {
+                    const poi = loadedPOIS[poiIndex];
+                    const poiMarker = new google.maps.Marker({
+                        position: { lat: Number.parseFloat(poi.lat), lng: Number.parseFloat(poi.lng) },
+                        label: poi.letter ? poi.letter : null,
+                        icon: poi.image ? { url: poi.image } : null,
+                        map: map,
+                    })
+                    const poiInfowindow = new google.maps.InfoWindow({
+                        content: poi.description + "<div><button onclick=\"deletePOI('"+poi._id+"')\">Delete</button></div>Last updated: "+poi.last_updated,
+                    });
+                    poiMarker.addListener("click", () => {
+                        poiInfowindow.open(map, poiMarker);
+                    });
+                }
+            }
+        });
+
+        xhr.open("GET", "https://detroit1map-e905.restdb.io/rest/pois");
+        xhr.setRequestHeader("content-type", "application/json");
+        xhr.setRequestHeader("x-apikey", "603ed7e0acc40f765fede369");
+        xhr.setRequestHeader("cache-control", "no-cache");
+
+        xhr.send();
+    }
     function initMap() {
         // The map, centered at Neo-Detroit Institute of Human Advancement
         map = new google.maps.Map(document.getElementById("map"), {
@@ -353,9 +453,7 @@
             center: IHA,
         });
         center = map.getCenter();
-        map.addListener("click", (mapsMouseEvent) => {
-            document.getElementById("latLong").innerText = mapsMouseEvent.latLng
-        })
+        map.addListener("click", mapClick)
         // The marker, positioned at the Neo-Detroit Institute of Human Advancement
         const marker = new google.maps.Marker({
             position: IHA,
@@ -388,6 +486,7 @@
                 drawHex(x,y)
             }
         }
+        getPOIS()
     }
 </script>
 
@@ -401,5 +500,13 @@
 
     <button onclick="toggleCoordinates()">Toggle Coordinates</button>
     <div id="latLong">Click on map and lat/long will appear here</div>
+    <div id="poiForm" class="hidden">
+        <label for="lat">Latitude:</label><input type="number" name="lat" id="lat" disabled/>
+        <label for="lng">Longitude:</label><input type="number" name="lng" id="lng" disabled/>
+        <label for="image">Image URL:</label><input type="url" name="image" id="image"/>
+        <label for="letter">Pin letter:</label><input type="text" name="letter" id="letter" maxlength="1"/>
+        <label for="description">Description:</label><textarea name="description" id="description"></textarea>
+        <button onclick="createPOIFromForm()">Create new POI</button>
+    </div>
 </body>
 </html>
