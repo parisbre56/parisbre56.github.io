@@ -22,11 +22,55 @@
     .hidden {
         display: none;
     }
+    * { box-sizing: border-box; }
+    body {
+        font: 16px Arial;
+    }
+    .autocomplete {
+        /*the container must be positioned relative:*/
+        position: relative;
+        display: inline-block;
+    }
     input {
-        display: block;
+        border: 1px solid black;
+        padding: 10px;
+        font-size: 16px;
+    }
+    #letter {
+        width: 5ch;
+    }
+    button {
+        background-color: DodgerBlue;
+        color: #fff;
     }
     textarea {
-        display: block;
+        width: 100%;
+    }
+    .autocomplete-items {
+        position: absolute;
+        border: 1px solid #d4d4d4;
+        border-bottom: none;
+        border-top: none;
+        z-index: 99;
+        /*position the autocomplete items to be the same width as the container:*/
+        top: 100%;
+        left: 0;
+        right: 0;
+    }
+    .autocomplete-items div {
+        padding: 10px;
+        cursor: pointer;
+        background-color: #fff;
+        border-bottom: 1px solid #d4d4d4;
+    }
+    .autocomplete-items div:hover {
+        /*when hovering an item:*/
+        background-color: #e9e9e9;
+    }
+    .autocomplete-active {
+        /*when navigating through the items using the arrow keys:*/
+        background-color: DodgerBlue !important;
+        color: #ffffff;
     }
 </style>
 <script>
@@ -77,6 +121,7 @@
     let map = null
     let loadedPOIS = null
     let radioSystem = true
+    let clickMarker = null
     const offset = {
         x: 10,
         y: 10
@@ -224,13 +269,121 @@
     // The location of Neo-Detroit Institute of Human Advancement
     const IHA = { lat:  42.338789, lng: -83.067945 };
     const POIS = [
-        {lat: 42.29840459661371, lng: -83.87795127390056, image: null, letter: "A", description: "Base Alpha"},
-        {lat: 42.73696669495791, lng: -83.44919754479162, image: null, letter: "B", description: "Base Beta"},
-        {lat: 42.26323434052922, lng: -82.45957817551827, image: null, letter: "C", description: "Base Canada"},
-        {lat: 42.73648419374985, lng: -82.72868770058172, image: null, letter: "D", description: "Base Delta"},
+        {lat: 42.29840459661371, lng: -83.87795127390056, image: null, image_title: null, letter: "A", description: "Base Alpha"},
+        {lat: 42.73696669495791, lng: -83.44919754479162, image: null, image_title: null, letter: "B", description: "Base Beta"},
+        {lat: 42.26323434052922, lng: -82.45957817551827, image: null, image_title: null, letter: "C", description: "Base Canada"},
+        {lat: 42.73648419374985, lng: -82.72868770058172, image: null, image_title: null, letter: "D", description: "Base Delta"},
+    ]
+    const imageSuggestions = [
+        {name: "Bus", url: "https://icon-library.net/images/google-maps-bus-icon/google-maps-bus-icon-8.jpg"},
     ]
     function toggleCoordinates() {
         radioSystem = !radioSystem
+    }
+    function autocomplete(inp, arr) {
+        /*the autocomplete function takes two arguments,
+        the text field element and an array of possible autocompleted values:*/
+        var currentFocus;
+        /*execute a function when someone writes in the text field:*/
+        inp.addEventListener("input", function(e) {
+            var a, b, i, val = this.value;
+            /*close any already open lists of autocompleted values*/
+            closeAllLists();
+            if (!val) { return false;}
+            currentFocus = -1;
+            /*create a DIV element that will contain the items (values):*/
+            a = document.createElement("DIV");
+            a.setAttribute("id", this.id + "autocomplete-list");
+            a.setAttribute("class", "autocomplete-items");
+            /*append the DIV element as a child of the autocomplete container:*/
+            this.parentNode.appendChild(a);
+            /*for each item in the array...*/
+            for (i = 0; i < arr.length; i++) {
+                /*check if the item starts with the same letters as the text field value:*/
+                const suggestion = arr[i];
+                const nameMatches = suggestion.name && suggestion.name.toUpperCase().includes(val.toUpperCase());
+                if (nameMatches || (suggestion.url && suggestion.url.toUpperCase().includes(val.toUpperCase()))) {
+                    /*create a DIV element for each matching element:*/
+                    b = document.createElement("DIV");
+                    /*make the matching letters bold:*/
+                    let toDisplay = suggestion.url
+                    if(nameMatches) {
+                        toDisplay = suggestion.name
+                    }
+                    const firstMatchIndex = toDisplay.toUpperCase().indexOf(val.toUpperCase());
+                    b.innerHTML = toDisplay.substring(0, firstMatchIndex);
+                    b.innerHTML += "<strong>" + toDisplay.substring(firstMatchIndex, firstMatchIndex+val.length) + "</strong>";
+                    b.innerHTML += toDisplay.substring(firstMatchIndex+val.length);
+
+                    /*insert a input field that will hold the current array item's value:*/
+                    b.innerHTML += "<input type='hidden' value='" + suggestion.url + "'>";
+                    /*execute a function when someone clicks on the item value (DIV element):*/
+                    b.addEventListener("click", function(e) {
+                        /*insert the value for the autocomplete text field:*/
+                        inp.value = this.getElementsByTagName("input")[0].value;
+                        /*close the list of autocompleted values,
+                        (or any other open lists of autocompleted values:*/
+                        closeAllLists();
+                    });
+                    a.appendChild(b);
+                }
+            }
+        });
+        /*execute a function presses a key on the keyboard:*/
+        inp.addEventListener("keydown", function(e) {
+            var x = document.getElementById(this.id + "autocomplete-list");
+            if (x) x = x.getElementsByTagName("div");
+            if (e.keyCode == 40) {
+                /*If the arrow DOWN key is pressed,
+                increase the currentFocus variable:*/
+                currentFocus++;
+                /*and and make the current item more visible:*/
+                addActive(x);
+            } else if (e.keyCode == 38) { //up
+                /*If the arrow UP key is pressed,
+                decrease the currentFocus variable:*/
+                currentFocus--;
+                /*and and make the current item more visible:*/
+                addActive(x);
+            } else if (e.keyCode == 13) {
+                /*If the ENTER key is pressed, prevent the form from being submitted,*/
+                e.preventDefault();
+                if (currentFocus > -1) {
+                    /*and simulate a click on the "active" item:*/
+                    if (x) x[currentFocus].click();
+                }
+            }
+        });
+        function addActive(x) {
+            /*a function to classify an item as "active":*/
+            if (!x) return false;
+            /*start by removing the "active" class on all items:*/
+            removeActive(x);
+            if (currentFocus >= x.length) currentFocus = 0;
+            if (currentFocus < 0) currentFocus = (x.length - 1);
+            /*add class "autocomplete-active":*/
+            x[currentFocus].classList.add("autocomplete-active");
+        }
+        function removeActive(x) {
+            /*a function to remove the "active" class from all autocomplete items:*/
+            for (var i = 0; i < x.length; i++) {
+                x[i].classList.remove("autocomplete-active");
+            }
+        }
+        function closeAllLists(elmnt) {
+            /*close all autocomplete lists in the document,
+            except the one passed as an argument:*/
+            var x = document.getElementsByClassName("autocomplete-items");
+            for (var i = 0; i < x.length; i++) {
+                if (elmnt != x[i] && elmnt != inp) {
+                    x[i].parentNode.removeChild(x[i]);
+                }
+            }
+        }
+        /*execute a function when someone clicks in the document:*/
+        document.addEventListener("click", function (e) {
+            closeAllLists(e.target);
+        });
     }
     /** @param pos A G-map position
      * @param x is up&right
@@ -335,8 +488,18 @@
         document.getElementById("latLong").innerText = mapsMouseEvent.latLng
         const poiForm = document.getElementById("poiForm");
         poiForm.classList.remove('hidden')
-        document.getElementById("lat").value = mapsMouseEvent.latLng.lat()
-        document.getElementById("lng").value = mapsMouseEvent.latLng.lng()
+        const lat = mapsMouseEvent.latLng.lat();
+        const lng = mapsMouseEvent.latLng.lng();
+        document.getElementById("lat").value = lat
+        document.getElementById("lng").value = lng
+        if(clickMarker) {
+            clickMarker.setMap(null)
+        }
+        clickMarker = new google.maps.Marker({
+            map,
+            animation: google.maps.Animation.DROP,
+            position: mapsMouseEvent.latLng,
+        });
     }
     function drawHex(x, y) {
         if(hexValid(x,y)) {
@@ -365,15 +528,17 @@
         const lat = document.getElementById("lat").value
         const lng = document.getElementById("lng").value
         const image = document.getElementById("image").value
+        const image_title = document.getElementById("image_title").value
         const letter = document.getElementById("letter").value
         const description = document.getElementById("description").value
-        createPOI(lat,lng,image,letter,description)
+        createPOI(lat,lng,image,image_title,letter,description)
     }
-    function createPOI(lat,lng,image,letter,description) {
+    function createPOI(lat,lng,image,image_title,letter,description) {
         const data = JSON.stringify({
             lat: lat,
             lng: lng,
             image: image ? image : null,
+            image_title: image_title ? image_title : null,
             letter: letter ? letter : null,
             description: description ? description : null,
             last_updated: new Date().toUTCString(),
@@ -423,6 +588,11 @@
                 loadedPOIS = JSON.parse(this.responseText)
                 for(let poiIndex = 0; poiIndex < loadedPOIS.length; poiIndex = poiIndex + 1) {
                     const poi = loadedPOIS[poiIndex];
+                    if(poi.image) {
+                        if(imageSuggestions.filter(sug => sug.url === poi.image).length === 0) {
+                            imageSuggestions.push({name: poi.image_title, url: poi.image})
+                        }
+                    }
                     const poiMarker = new google.maps.Marker({
                         position: { lat: Number.parseFloat(poi.lat), lng: Number.parseFloat(poi.lng) },
                         label: poi.letter ? poi.letter : null,
@@ -487,6 +657,7 @@
             }
         }
         getPOIS()
+        autocomplete(document.getElementById("image"),imageSuggestions)
     }
 </script>
 
@@ -499,14 +670,19 @@
     ></script>
 
     <button onclick="toggleCoordinates()">Toggle Coordinates</button>
-    <div id="latLong">Click on map and lat/long will appear here</div>
+    <div id="latLong">Click on map and lat/long will appear here. You can then save the chosen coordinates as a PoI</div>
     <div id="poiForm" class="hidden">
-        <label for="lat">Latitude:</label><input type="number" name="lat" id="lat" disabled/>
-        <label for="lng">Longitude:</label><input type="number" name="lng" id="lng" disabled/>
-        <label for="image">Image URL:</label><input type="url" name="image" id="image"/>
-        <label for="letter">Pin letter:</label><input type="text" name="letter" id="letter" maxlength="1"/>
-        <label for="description">Description:</label><textarea name="description" id="description"></textarea>
-        <button onclick="createPOIFromForm()">Create new POI</button>
+        <div>
+            <label for="lat">Latitude:</label><input type="number" name="lat" id="lat" disabled/>
+            <label for="lng">Longitude:</label><input type="number" name="lng" id="lng" disabled/>
+        </div>
+        <div>
+            <label for="image"><abbr title="Start writing to see a list of suggestions. Image will be resized to 30x30 pixels">Image URL:</abbr></label><div class="autocomplete"><input type="url" name="image" id="image"/></div>
+            <label for="image_title"><abbr title="Title for the image when displaying suggestions">Image Title:</abbr></label><input type="text" name="image_title" id="image_title" maxlength="30"/>
+            <label for="letter"><abbr title="A letter to display on the pin">Pin letter:</abbr></label><input type="text" name="letter" id="letter" maxlength="1"/>
+        </div>
+        <div><label for="description"><abbr title="You can put HTML in the description and it will render in the PoI's popup">Description:</abbr></label><textarea name="description" id="description"></textarea></div>
+        <button onclick="createPOIFromForm()">Create new PoI</button>
     </div>
 </body>
 </html>
