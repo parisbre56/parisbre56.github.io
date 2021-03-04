@@ -426,7 +426,7 @@
                     const poiMarker = new google.maps.Marker({
                         position: { lat: Number.parseFloat(poi.lat), lng: Number.parseFloat(poi.lng) },
                         label: poi.letter ? poi.letter : null,
-                        icon: poi.image ? { url: poi.image } : null,
+                        icon: poi.image ? { url: poi.image, scaledSize: new google.maps.Size(30, 30), origin: new google.maps.Point(0,0), anchor: new google.maps.Point(15, 15) } : null,
                         map: map,
                     })
                     const poiInfowindow = new google.maps.InfoWindow({
@@ -471,7 +471,7 @@
             const poiMarker = new google.maps.Marker({
                 position: poi,
                 label: poi.letter ? poi.letter : null,
-                icon: poi.image ? { url: poi.image } : null,
+                icon: poi.image ? { url: poi.image, scaledSize: new google.maps.Size(30, 30), origin: new google.maps.Point(0,0), anchor: new google.maps.Point(15, 15) } : null,
                 map: map,
             })
             const poiInfowindow = new google.maps.InfoWindow({
