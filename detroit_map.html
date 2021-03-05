@@ -87,34 +87,38 @@
     const redHex = {
         paths: [],
         strokeColor: "#000000",
-        strokeOpacity: 0.8,
+        strokeOpacity: 0.5,
         strokeWeight: 2,
         fillColor: "#FF0000",
         fillOpacity: 0.20,
+        geodesic: true,
     }
     const orangeHex = {
         paths: [],
         strokeColor: "#000000",
-        strokeOpacity: 0.8,
+        strokeOpacity: 0.5,
         strokeWeight: 2,
         fillColor: "#ff6600",
         fillOpacity: 0.20,
+        geodesic: true,
     }
     const yellowHex = {
         paths: [],
         strokeColor: "#000000",
-        strokeOpacity: 0.8,
+        strokeOpacity: 0.5,
         strokeWeight: 2,
         fillColor: "#ffff00",
         fillOpacity: 0.20,
+        geodesic: true,
     }
     const emptyHex = {
         paths: [],
         strokeColor: "#000000",
-        strokeOpacity: 0.8,
+        strokeOpacity: 0.5,
         strokeWeight: 2,
         fillColor: "#000000",
         fillOpacity: 0.00,
+        geodesic: true,
     }
     const hexes = {}
     let redZonePoly = null
@@ -455,26 +459,34 @@
 
     }
     function injectTooltip(event, data) {
-        if (!tipObj && event) {
-            //create the tooltip object
-            tipObj = document.createElement("div");
-            tipObj.classList.add("tooltip")
-            tipObj.innerHTML = translateCoordinates(data);
+        if(document.getElementById("hide_coordinates").checked) {
+            deleteTooltip(event)
+        } else {
+            if (!tipObj && event) {
+                //create the tooltip object
+                tipObj = document.createElement("div");
+                tipObj.classList.add("tooltip")
+                tipObj.innerHTML = translateCoordinates(data);
 
-            //position it
-            tipObj.style.position = "fixed";
-            tipObj.style.top = event.domEvent.clientY + window.scrollY + offset.y + "px";
-            tipObj.style.left = event.domEvent.clientX + window.scrollX + offset.x + "px";
+                //position it
+                tipObj.style.position = "fixed";
+                tipObj.style.top = event.domEvent.clientY + window.scrollY + offset.y + "px";
+                tipObj.style.left = event.domEvent.clientX + window.scrollX + offset.x + "px";
 
-            //add it to the body
-            document.body.appendChild(tipObj);
+                //add it to the body
+                document.body.appendChild(tipObj);
+            }
         }
     }
     function moveTooltip(event) {
-        if (tipObj && event) {
-            //position it
-            tipObj.style.top = event.domEvent.clientY + window.scrollY + offset.y + "px";
-            tipObj.style.left = event.domEvent.clientX + window.scrollX + offset.x + "px";
+        if(document.getElementById("hide_coordinates").checked) {
+            deleteTooltip(event)
+        } else {
+            if (tipObj && event) {
+                //position it
+                tipObj.style.top = event.domEvent.clientY + window.scrollY + offset.y + "px";
+                tipObj.style.left = event.domEvent.clientX + window.scrollX + offset.x + "px";
+            }
         }
     }
     function deleteTooltip(event) {
@@ -530,6 +542,12 @@
         return Math.abs(x) < hexLoop && Math.abs(y) < hexLoop
     }
     function createPOIFromForm() {
+        const invalid = Array.from(document.getElementById("poiForm").getElementsByTagName("input")).filter(input => input.validity.valid === false)
+        if(invalid.length > 0) {
+            console.error("invalid:",invalid)
+            alert("Invalid input: "+invalid.map(input => input.name).join())
+            return
+        }
         const lat = document.getElementById("lat").value
         const lng = document.getElementById("lng").value
         const image = document.getElementById("image").value
@@ -634,6 +652,30 @@
 
         xhr.send();
     }
+    function hideAndClearForm() {
+        if(clickMarker) {
+            clickMarker.setMap(null)
+            clickMarker = null
+        }
+        const poiForm = document.getElementById("poiForm");
+        poiForm.classList.add("hidden")
+        Array.from(poiForm.getElementsByTagName("input")).forEach(input => input.value = null)
+        document.getElementById("image_scaling").value = 1
+    }
+    function updateHexes() {
+        const hideGrid = document.getElementById("hide_grid").checked
+        const hideColours = document.getElementById("hide_colours").checked
+        for(let x = -hexLoop; x <= hexLoop; x = x + 1) {
+            for(let y = -hexLoop; y <= hexLoop; y = y + 1) {
+                const hex = getHex(x,y);
+                const hexType = getHexType(x,y);
+                hex.setOptions({
+                    fillOpacity: hideColours ? 0.0 : hexType.fillOpacity,
+                    strokeOpacity: hideGrid ? 0.0 : hexType.strokeOpacity,
+                })
+            }
+        }
+    }
     function initMap() {
         // The map, centered at Neo-Detroit Institute of Human Advancement
         map = new google.maps.Map(document.getElementById("map"), {
@@ -661,6 +703,8 @@
         }
         getPOIS()
         autocomplete(document.getElementById("image"),document.getElementById("image_title"),document.getElementById("image_scaling"),imageSuggestions)
+        hideAndClearForm()
+        updateHexes()
     }
 </script>
 
@@ -672,12 +716,16 @@
             async
     ></script>
 
-    <button onclick="toggleCoordinates()">Toggle Coordinates</button>
+    <button onclick="toggleCoordinates()">Toggle coordinate system</button>
+    <input type="checkbox" id="hide_coordinates"><label for="hide_coordinates">Hide coordinates</label>
+    <input type="checkbox" id="hide_grid" onchange="updateHexes()"><label for="hide_grid">Hide grid</label>
+    <input type="checkbox" id="hide_colours" onchange="updateHexes()"><label for="hide_colours">Hide colours</label>
     <div id="latLong">Click on map and lat/long will appear here. You can then save the chosen coordinates as a PoI</div>
     <div id="poiForm" class="hidden">
+        <div><button onclick="hideAndClearForm()">Hide and Clear</button></div>
         <div>
-            <label for="lat">Latitude:</label><input type="number" name="lat" id="lat" disabled/>
-            <label for="lng">Longitude:</label><input type="number" name="lng" id="lng" disabled/>
+            <label for="lat">Latitude:</label><input type="number" name="lat" id="lat" step="any" disabled/>
+            <label for="lng">Longitude:</label><input type="number" name="lng" id="lng" step="any" disabled/>
         </div>
         <div>
             <label for="image"><abbr title="Start writing to see a list of suggestions. Image will be resized to 30x30 pixels">Image URL:</abbr></label><div class="autocomplete"><input type="url" name="image" id="image"/></div>
