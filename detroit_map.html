@@ -13,7 +13,7 @@
         /* The width is the width of the web page */
     }
     .tooltip {
-        width: 100px;
+        width: 150px;
         height: 40px;
         padding: 10px;
         color: #009600;
@@ -38,6 +38,9 @@
     }
     #letter {
         width: 5ch;
+    }
+    #image_scaling {
+        width: 7ch;
     }
     button {
         background-color: DodgerBlue;
@@ -269,18 +272,18 @@
     // The location of Neo-Detroit Institute of Human Advancement
     const IHA = { lat:  42.338789, lng: -83.067945 };
     const POIS = [
-        {lat: 42.29840459661371, lng: -83.87795127390056, image: null, image_title: null, letter: "A", description: "Base Alpha"},
-        {lat: 42.73696669495791, lng: -83.44919754479162, image: null, image_title: null, letter: "B", description: "Base Beta"},
-        {lat: 42.26323434052922, lng: -82.45957817551827, image: null, image_title: null, letter: "C", description: "Base Canada"},
-        {lat: 42.73648419374985, lng: -82.72868770058172, image: null, image_title: null, letter: "D", description: "Base Delta"},
+        {lat: 42.29840459661371, lng: -83.87795127390056, image: "https://i.imgur.com/fM5mU91.png", image_title: "American Base", image_scaling: 2, letter: "A", description: "Base Alpha"},
+        {lat: 42.73696669495791, lng: -83.44919754479162, image: "https://i.imgur.com/fM5mU91.png", image_title: "American Base", image_scaling: 2, letter: "B", description: "Base Beta"},
+        {lat: 42.26323434052922, lng: -82.45957817551827, image: "https://i.imgur.com/ttim5xF.png", image_title: "Canadian Base", image_scaling: 2, letter: "C", description: "Base Canada"},
+        {lat: 42.73648419374985, lng: -82.72868770058172, image: "https://i.imgur.com/fM5mU91.png", image_title: "American Base", image_scaling: 2, letter: "D", description: "Base Delta"},
     ]
     const imageSuggestions = [
-        {name: "Bus", url: "https://icon-library.net/images/google-maps-bus-icon/google-maps-bus-icon-8.jpg"},
+        {name: "Bus", url: "https://icon-library.net/images/google-maps-bus-icon/google-maps-bus-icon-8.jpg", image_scaling: 1},
     ]
     function toggleCoordinates() {
         radioSystem = !radioSystem
     }
-    function autocomplete(inp, arr) {
+    function autocomplete(inp, title, scaling, arr) {
         /*the autocomplete function takes two arguments,
         the text field element and an array of possible autocompleted values:*/
         var currentFocus;
@@ -310,17 +313,19 @@
                     if(nameMatches) {
                         toDisplay = suggestion.name
                     }
-                    const firstMatchIndex = toDisplay.toUpperCase().indexOf(val.toUpperCase());
-                    b.innerHTML = toDisplay.substring(0, firstMatchIndex);
-                    b.innerHTML += "<strong>" + toDisplay.substring(firstMatchIndex, firstMatchIndex+val.length) + "</strong>";
-                    b.innerHTML += toDisplay.substring(firstMatchIndex+val.length);
+                    b.innerHTML = toDisplay.replaceAll(new RegExp(val,'iug'), (match) => "<strong>"+match+"</strong>")
 
                     /*insert a input field that will hold the current array item's value:*/
                     b.innerHTML += "<input type='hidden' value='" + suggestion.url + "'>";
+                    b.innerHTML += "<input type='hidden' value='" + (suggestion.name ? suggestion.name : '') + "'>";
+                    b.innerHTML += "<input type='hidden' value='" + (suggestion.image_scaling ? suggestion.image_scaling : 1) + "'>";
                     /*execute a function when someone clicks on the item value (DIV element):*/
                     b.addEventListener("click", function(e) {
                         /*insert the value for the autocomplete text field:*/
-                        inp.value = this.getElementsByTagName("input")[0].value;
+                        const storedValues = this.getElementsByTagName("input");
+                        inp.value = storedValues[0].value;
+                        title.value = storedValues[1].value;
+                        scaling.value = storedValues[2].value;
                         /*close the list of autocompleted values,
                         (or any other open lists of autocompleted values:*/
                         closeAllLists();
@@ -529,16 +534,18 @@
         const lng = document.getElementById("lng").value
         const image = document.getElementById("image").value
         const image_title = document.getElementById("image_title").value
+        const image_scaling = document.getElementById("image_scaling").value
         const letter = document.getElementById("letter").value
         const description = document.getElementById("description").value
-        createPOI(lat,lng,image,image_title,letter,description)
+        createPOI(lat,lng,image,image_title,image_scaling,letter,description)
     }
-    function createPOI(lat,lng,image,image_title,letter,description) {
+    function createPOI(lat,lng,image,image_title,image_scaling,letter,description) {
         const data = JSON.stringify({
             lat: lat,
             lng: lng,
             image: image ? image : null,
             image_title: image_title ? image_title : null,
+            image_scaling: image_scaling ? image_scaling : 1,
             letter: letter ? letter : null,
             description: description ? description : null,
             last_updated: new Date().toUTCString(),
@@ -579,6 +586,36 @@
 
         xhr.send();
     }
+
+    function displayPOIS(toDisplay,deletable) {
+        for (let poiIndex = 0; poiIndex < toDisplay.length; poiIndex = poiIndex + 1) {
+            const poi = toDisplay[poiIndex];
+            const imageScaling = poi.image_scaling ? Number.parseFloat(poi.image_scaling) : 1;
+            if (poi.image) {
+                if (imageSuggestions.filter(sug => sug.url === poi.image && sug.name === poi.image_title).length === 0) {
+                    imageSuggestions.push({name: poi.image_title, url: poi.image, image_scaling: imageScaling})
+                }
+            }
+            const poiMarker = new google.maps.Marker({
+                position: {lat: Number.parseFloat(poi.lat), lng: Number.parseFloat(poi.lng)},
+                label: poi.letter ? poi.letter : null,
+                icon: poi.image ? {
+                    url: poi.image,
+                    scaledSize: new google.maps.Size(imageScaling*30, imageScaling*30),
+                    origin: new google.maps.Point(0, 0),
+                    anchor: new google.maps.Point(imageScaling*15, imageScaling*15)
+                } : null,
+                map: map,
+            })
+            const poiInfowindow = new google.maps.InfoWindow({
+                content: poi.description + (deletable ? ("<div><button onclick=\"deletePOI('" + poi._id + "')\">Delete</button></div>Last updated: " + poi.last_updated) : ''),
+            });
+            poiMarker.addListener("click", () => {
+                poiInfowindow.open(map, poiMarker);
+            });
+        }
+    }
+
     function getPOIS() {
         const xhr = new XMLHttpRequest();
         xhr.withCredentials = false;
@@ -586,26 +623,7 @@
         xhr.addEventListener("readystatechange", function () {
             if (this.readyState === 4) {
                 loadedPOIS = JSON.parse(this.responseText)
-                for(let poiIndex = 0; poiIndex < loadedPOIS.length; poiIndex = poiIndex + 1) {
-                    const poi = loadedPOIS[poiIndex];
-                    if(poi.image) {
-                        if(imageSuggestions.filter(sug => sug.url === poi.image).length === 0) {
-                            imageSuggestions.push({name: poi.image_title, url: poi.image})
-                        }
-                    }
-                    const poiMarker = new google.maps.Marker({
-                        position: { lat: Number.parseFloat(poi.lat), lng: Number.parseFloat(poi.lng) },
-                        label: poi.letter ? poi.letter : null,
-                        icon: poi.image ? { url: poi.image, scaledSize: new google.maps.Size(30, 30), origin: new google.maps.Point(0,0), anchor: new google.maps.Point(15, 15) } : null,
-                        map: map,
-                    })
-                    const poiInfowindow = new google.maps.InfoWindow({
-                        content: poi.description + "<div><button onclick=\"deletePOI('"+poi._id+"')\">Delete</button></div>Last updated: "+poi.last_updated,
-                    });
-                    poiMarker.addListener("click", () => {
-                        poiInfowindow.open(map, poiMarker);
-                    });
-                }
+                displayPOIS(loadedPOIS,true);
             }
         });
 
@@ -635,29 +653,14 @@
         marker.addListener("click", () => {
             infowindow.open(map, marker);
         });
-        for(let poiIndex = 0; poiIndex < POIS.length; poiIndex = poiIndex + 1) {
-            //{lat: 42.29840459661371, lng: -83.87795127390056, image: null, letter: "A", description: "Base Alpha"},
-            const poi = POIS[poiIndex];
-            const poiMarker = new google.maps.Marker({
-                position: poi,
-                label: poi.letter ? poi.letter : null,
-                icon: poi.image ? { url: poi.image, scaledSize: new google.maps.Size(30, 30), origin: new google.maps.Point(0,0), anchor: new google.maps.Point(15, 15) } : null,
-                map: map,
-            })
-            const poiInfowindow = new google.maps.InfoWindow({
-                content: poi.description,
-            });
-            poiMarker.addListener("click", () => {
-                poiInfowindow.open(map, poiMarker);
-            });
-        }
+        displayPOIS(POIS,false)
         for(let x = -hexLoop; x <= hexLoop; x = x + 1) {
             for(let y = -hexLoop; y <= hexLoop; y = y + 1) {
                 drawHex(x,y)
             }
         }
         getPOIS()
-        autocomplete(document.getElementById("image"),imageSuggestions)
+        autocomplete(document.getElementById("image"),document.getElementById("image_title"),document.getElementById("image_scaling"),imageSuggestions)
     }
 </script>
 
@@ -679,6 +682,7 @@
         <div>
             <label for="image"><abbr title="Start writing to see a list of suggestions. Image will be resized to 30x30 pixels">Image URL:</abbr></label><div class="autocomplete"><input type="url" name="image" id="image"/></div>
             <label for="image_title"><abbr title="Title for the image when displaying suggestions">Image Title:</abbr></label><input type="text" name="image_title" id="image_title" maxlength="30"/>
+            <label for="image_scaling"><abbr title="Scale up image with a starting point of 30x30. So a scale of 1.5 means 45x45 pixels.">Image Scale:</abbr></label><input type="number" name="image_scaling" id="image_scaling" value="1" step="0.01" min="0.01" max="9.99"/>x
             <label for="letter"><abbr title="A letter to display on the pin">Pin letter:</abbr></label><input type="text" name="letter" id="letter" maxlength="1"/>
         </div>
         <div><label for="description"><abbr title="You can put HTML in the description and it will render in the PoI's popup">Description:</abbr></label><textarea name="description" id="description"></textarea></div>
