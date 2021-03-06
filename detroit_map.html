@@ -77,6 +77,7 @@
     }
 </style>
 <script>
+    "use strict";
     // Initialize and add the map
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
     const hexLoop = 15
@@ -129,6 +130,8 @@
     let loadedPOIS = null
     let radioSystem = true
     let clickMarker = null
+    let currInfoWindow = null
+    let toUpdate = null
     const offset = {
         x: 10,
         y: 10
@@ -276,6 +279,7 @@
     // The location of Neo-Detroit Institute of Human Advancement
     const IHA = { lat:  42.338789, lng: -83.067945 };
     const POIS = [
+        {lat: IHA.lat, lng: IHA.lng, image: null, image_title: null, image_scaling: 1, letter: null, description: "Neo-Detroit Institute of Human Advancement"},
         {lat: 42.29840459661371, lng: -83.87795127390056, image: "https://i.imgur.com/fM5mU91.png", image_title: "American Base", image_scaling: 2, letter: "A", description: "Base Alpha"},
         {lat: 42.73696669495791, lng: -83.44919754479162, image: "https://i.imgur.com/fM5mU91.png", image_title: "American Base", image_scaling: 2, letter: "B", description: "Base Beta"},
         {lat: 42.26323434052922, lng: -82.45957817551827, image: "https://i.imgur.com/ttim5xF.png", image_title: "Canadian Base", image_scaling: 2, letter: "C", description: "Base Canada"},
@@ -300,7 +304,7 @@
             currentFocus = -1;
             /*create a DIV element that will contain the items (values):*/
             a = document.createElement("DIV");
-            a.setAttribute("id", this.id + "autocomplete-list");
+            a.setAttribute("id", `${this.id}autocomplete-list`);
             a.setAttribute("class", "autocomplete-items");
             /*append the DIV element as a child of the autocomplete container:*/
             this.parentNode.appendChild(a);
@@ -317,12 +321,12 @@
                     if(nameMatches) {
                         toDisplay = suggestion.name
                     }
-                    b.innerHTML = toDisplay.replaceAll(new RegExp(val,'iug'), (match) => "<strong>"+match+"</strong>")
+                    b.innerHTML = toDisplay.replaceAll(new RegExp(val,'iug'), (match) => `<strong>${match}</strong>`)
 
                     /*insert a input field that will hold the current array item's value:*/
-                    b.innerHTML += "<input type='hidden' value='" + suggestion.url + "'>";
-                    b.innerHTML += "<input type='hidden' value='" + (suggestion.name ? suggestion.name : '') + "'>";
-                    b.innerHTML += "<input type='hidden' value='" + (suggestion.image_scaling ? suggestion.image_scaling : 1) + "'>";
+                    b.innerHTML += `<input type='hidden' value='${suggestion.url}'>`;
+                    b.innerHTML += `<input type='hidden' value='${suggestion.name ? suggestion.name : ''}'>`;
+                    b.innerHTML += `<input type='hidden' value='${suggestion.image_scaling ? suggestion.image_scaling : 1}'>`;
                     /*execute a function when someone clicks on the item value (DIV element):*/
                     b.addEventListener("click", function(e) {
                         /*insert the value for the autocomplete text field:*/
@@ -340,7 +344,7 @@
         });
         /*execute a function presses a key on the keyboard:*/
         inp.addEventListener("keydown", function(e) {
-            var x = document.getElementById(this.id + "autocomplete-list");
+            var x = document.getElementById(`${this.id}autocomplete-list`);
             if (x) x = x.getElementsByTagName("div");
             if (e.keyCode == 40) {
                 /*If the arrow DOWN key is pressed,
@@ -499,16 +503,25 @@
     function translateCoordinates(pos) {
         const xName = (radioSystem && pos.x >= -11 && pos.x <= 10) ? alphabet[pos.x+11] : pos.x
         const yName = (radioSystem) ? pos.y + 14 : pos.y
-        return xName + ", " + yName
+        return `${xName}, ${yName}`
     }
     function mapClick(mapsMouseEvent) {
+        if(currInfoWindow) {
+            currInfoWindow.close()
+            currInfoWindow = null
+        }
         document.getElementById("latLong").innerText = mapsMouseEvent.latLng
         const poiForm = document.getElementById("poiForm");
         poiForm.classList.remove('hidden')
         const lat = mapsMouseEvent.latLng.lat();
         const lng = mapsMouseEvent.latLng.lng();
+        document.getElementById("_id").value = null
+        document.getElementById("id").value = null
         document.getElementById("lat").value = lat
         document.getElementById("lng").value = lng
+        document.getElementById("lat").disabled = false
+        document.getElementById("lng").disabled = false
+        document.getElementById("poiActionButton").innerHTML = "Create new PoI"
         if(clickMarker) {
             clickMarker.setMap(null)
         }
@@ -516,7 +529,61 @@
             map,
             animation: google.maps.Animation.DROP,
             position: mapsMouseEvent.latLng,
+            draggable: false,
         });
+        setToUpdate(clickMarker)
+    }
+    function unsetToUpdate() {
+        if(toUpdate) {
+            if(toUpdate.detroitDrag) {
+                google.maps.event.removeListener(toUpdate.detroitDrag)
+                toUpdate.detroitDrag = null
+            }
+            if(toUpdate.detroitLatLng) {
+                toUpdate.setPosition(toUpdate.detroitLatLng)
+                toUpdate.detroitLatLng = null
+            }
+            toUpdate.setOptions({draggable: false})
+            toUpdate = null
+        }
+    }
+    function setToUpdate(toSet) {
+        unsetToUpdate()
+        toUpdate = toSet
+        toUpdate.setOptions({draggable: true})
+        toUpdate.detroitDrag = toUpdate.addListener('drag', (mapsMouseEvent) => {
+            const lat = mapsMouseEvent.latLng.lat();
+            const lng = mapsMouseEvent.latLng.lng();
+            document.getElementById("lat").value = lat
+            document.getElementById("lng").value = lng
+        })
+        toUpdate.detroitLatLng = toUpdate.getPosition()
+    }
+    function poiClick(poi,marker) {
+        const poiForm = document.getElementById("poiForm");
+        poiForm.classList.remove('hidden')
+        document.getElementById("_id").value = poi._id
+        document.getElementById("id").value = poi.id
+        document.getElementById("lat").value = poi.lat ? Number.parseFloat(poi.lat) : null
+        document.getElementById("lng").value = poi.lng ? Number.parseFloat(poi.lng) : null
+        document.getElementById("image").value = poi.image
+        document.getElementById("image_title").value = poi.image_title
+        document.getElementById("image_scaling").value = poi.image_scaling ? Number.parseFloat(poi.image_scaling) : 1
+        document.getElementById("letter").value = poi.letter
+        document.getElementById("description").value = poi.description
+        document.getElementById("poiActionButton").innerHTML = "Update PoI"
+        if(poi._id) {
+            document.getElementById("lat").disabled = false
+            document.getElementById("lng").disabled = false
+            setToUpdate(marker)
+        } else {
+            document.getElementById("lat").disabled = true
+            document.getElementById("lng").disabled = true
+            unsetToUpdate()
+        }
+        if(clickMarker) {
+            clickMarker.setMap(null)
+        }
     }
     function drawHex(x, y) {
         if(hexValid(x,y)) {
@@ -545,9 +612,11 @@
         const invalid = Array.from(document.getElementById("poiForm").getElementsByTagName("input")).filter(input => input.validity.valid === false)
         if(invalid.length > 0) {
             console.error("invalid:",invalid)
-            alert("Invalid input: "+invalid.map(input => input.name).join())
+            alert(`Invalid input: ${invalid.map(input => input.name).join()}`)
             return
         }
+        const _id = document.getElementById("_id").value
+        const id = document.getElementById("id").value
         const lat = document.getElementById("lat").value
         const lng = document.getElementById("lng").value
         const image = document.getElementById("image").value
@@ -555,10 +624,10 @@
         const image_scaling = document.getElementById("image_scaling").value
         const letter = document.getElementById("letter").value
         const description = document.getElementById("description").value
-        createPOI(lat,lng,image,image_title,image_scaling,letter,description)
+        createPOI(_id,id,lat,lng,image,image_title,image_scaling,letter,description)
     }
-    function createPOI(lat,lng,image,image_title,image_scaling,letter,description) {
-        const data = JSON.stringify({
+    function createPOI(_id,id,lat,lng,image,image_title,image_scaling,letter,description) {
+        const data = {
             lat: lat,
             lng: lng,
             image: image ? image : null,
@@ -567,7 +636,10 @@
             letter: letter ? letter : null,
             description: description ? description : null,
             last_updated: new Date().toUTCString(),
-        });
+        }
+        if(id) {
+            data.id = id
+        }
 
         const xhr = new XMLHttpRequest();
         xhr.withCredentials = false;
@@ -579,14 +651,18 @@
             }
         });
 
-        xhr.open("POST", "https://detroit1map-e905.restdb.io/rest/pois");
+        if(_id) {
+            xhr.open("PUT", `https://detroit1map-e905.restdb.io/rest/pois/${_id}`);
+        } else {
+            xhr.open("POST", "https://detroit1map-e905.restdb.io/rest/pois");
+        }
         xhr.setRequestHeader("content-type", "application/json");
         xhr.setRequestHeader("x-apikey", "603ed7e0acc40f765fede369");
         xhr.setRequestHeader("cache-control", "no-cache");
 
-        xhr.send(data);
+        xhr.send(JSON.stringify(data));
     }
-    function deletePOI(id) {
+    function deletePOI(_id) {
         const xhr = new XMLHttpRequest();
         xhr.withCredentials = false;
 
@@ -597,7 +673,7 @@
             }
         });
 
-        xhr.open("DELETE", "https://detroit1map-e905.restdb.io/rest/pois/"+id);
+        xhr.open("DELETE", `https://detroit1map-e905.restdb.io/rest/pois/${_id}`);
         xhr.setRequestHeader("content-type", "application/json");
         xhr.setRequestHeader("x-apikey", "603ed7e0acc40f765fede369");
         xhr.setRequestHeader("cache-control", "no-cache");
@@ -625,12 +701,33 @@
                 } : null,
                 map: map,
             })
-            const poiInfowindow = new google.maps.InfoWindow({
-                content: poi.description + (deletable ? ("<div><button onclick=\"deletePOI('" + poi._id + "')\">Delete</button></div>Last updated: " + poi.last_updated) : ''),
+            const poiInfoWindow = new google.maps.InfoWindow({
+                content: `${poi.description}${deletable ? (`<div><button onclick="deletePOI('${poi._id}')">Delete</button></div>Last updated: ${poi.last_updated}`) : ''}`,
             });
+            poiInfoWindow.deletable = deletable
             poiMarker.addListener("click", () => {
-                poiInfowindow.open(map, poiMarker);
+                if(currInfoWindow) {
+                    currInfoWindow.close()
+                    if(currInfoWindow.deletable) {
+                        hideAndClearForm()
+                    }
+                }
+                currInfoWindow = poiInfoWindow
+                poiInfoWindow.open(map, poiMarker);
+                if(deletable) {
+                    poiClick(poi,poiMarker)
+                } else {
+                    hideAndClearForm()
+                }
             });
+            poiInfoWindow.addListener("closeclick", () => {
+                if(currInfoWindow === poiInfoWindow) {
+                    currInfoWindow = null
+                }
+                if(deletable) {
+                    hideAndClearForm()
+                }
+            })
         }
     }
 
@@ -657,10 +754,19 @@
             clickMarker.setMap(null)
             clickMarker = null
         }
+        unsetToUpdate()
         const poiForm = document.getElementById("poiForm");
         poiForm.classList.add("hidden")
         Array.from(poiForm.getElementsByTagName("input")).forEach(input => input.value = null)
         document.getElementById("image_scaling").value = 1
+    }
+    function updateMarker() {
+        if(toUpdate) {
+            toUpdate.setPosition({
+                lat: Number.parseFloat(document.getElementById("lat").value),
+                lng: Number.parseFloat(document.getElementById("lng").value),
+            })
+        }
     }
     function updateHexes() {
         const hideGrid = document.getElementById("hide_grid").checked
@@ -684,17 +790,6 @@
         });
         center = map.getCenter();
         map.addListener("click", mapClick)
-        // The marker, positioned at the Neo-Detroit Institute of Human Advancement
-        const marker = new google.maps.Marker({
-            position: IHA,
-            map: map,
-        });
-        const infowindow = new google.maps.InfoWindow({
-            content: "Neo-Detroit Institute of Human Advancement",
-        });
-        marker.addListener("click", () => {
-            infowindow.open(map, marker);
-        });
         displayPOIS(POIS,false)
         for(let x = -hexLoop; x <= hexLoop; x = x + 1) {
             for(let y = -hexLoop; y <= hexLoop; y = y + 1) {
@@ -718,14 +813,18 @@
 
     <button onclick="toggleCoordinates()">Toggle coordinate system</button>
     <input type="checkbox" id="hide_coordinates"><label for="hide_coordinates">Hide coordinates</label>
-    <input type="checkbox" id="hide_grid" onchange="updateHexes()"><label for="hide_grid">Hide grid</label>
+    <input type="checkbox" id="hide_grid" onchange="updateHexes()" checked><label for="hide_grid">Hide grid</label>
     <input type="checkbox" id="hide_colours" onchange="updateHexes()"><label for="hide_colours">Hide colours</label>
-    <div id="latLong">Click on map and lat/long will appear here. You can then save the chosen coordinates as a PoI</div>
+    <div id="latLong">Click on map and lat/long will appear here. You can then save the chosen coordinates as a PoI. If you click on a user-generated PoI you'll be able to edit or delete it instead.</div>
     <div id="poiForm" class="hidden">
         <div><button onclick="hideAndClearForm()">Hide and Clear</button></div>
         <div>
-            <label for="lat">Latitude:</label><input type="number" name="lat" id="lat" step="any" disabled/>
-            <label for="lng">Longitude:</label><input type="number" name="lng" id="lng" step="any" disabled/>
+            <label for="_id">_id:</label><input type="text" name="_id" id="_id" disabled/>
+            <label for="id">id:</label><input type="number" name="id" id="id" disabled/>
+        </div>
+        <div>
+            <label for="lat">Latitude:</label><input type="number" name="lat" id="lat" step="any" onchange="updateMarker()" disabled/>
+            <label for="lng">Longitude:</label><input type="number" name="lng" id="lng" step="any" onchange="updateMarker()" disabled/>
         </div>
         <div>
             <label for="image"><abbr title="Start writing to see a list of suggestions. Image will be resized to 30x30 pixels">Image URL:</abbr></label><div class="autocomplete"><input type="url" name="image" id="image"/></div>
@@ -734,7 +833,7 @@
             <label for="letter"><abbr title="A letter to display on the pin">Pin letter:</abbr></label><input type="text" name="letter" id="letter" maxlength="1"/>
         </div>
         <div><label for="description"><abbr title="You can put HTML in the description and it will render in the PoI's popup">Description:</abbr></label><textarea name="description" id="description"></textarea></div>
-        <button onclick="createPOIFromForm()">Create new PoI</button>
+        <button id="poiActionButton" onclick="createPOIFromForm()"></button>
     </div>
 </body>
 </html>
