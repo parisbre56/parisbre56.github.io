@@ -39,7 +39,7 @@
     #letter {
         width: 5ch;
     }
-    #image_scaling {
+    #image_scaling, #order {
         width: 7ch;
     }
     button {
@@ -82,7 +82,10 @@
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
     const hexLoop = 15
     const hexRot = 90
-    const hexRadius = 4600
+    const hexRadiusConst = 4600
+    function hexRadius() {
+        return hexRadiusConst * document.getElementById("leak").value
+    }
     const mapRange = 1
     const sqrt3 = Math.sqrt(3)
     const redHex = {
@@ -121,7 +124,7 @@
         fillOpacity: 0.00,
         geodesic: true,
     }
-    const hexes = {}
+    let hexes = {}
     let redZonePoly = null
     let orangeZonePoly = null
     let yellowZonePoly = null
@@ -279,14 +282,21 @@
     // The location of Neo-Detroit Institute of Human Advancement
     const IHA = { lat:  42.338789, lng: -83.067945 };
     const POIS = [
-        {lat: IHA.lat, lng: IHA.lng, image: null, image_title: null, image_scaling: 1, letter: null, description: "Neo-Detroit Institute of Human Advancement"},
-        {lat: 42.29840459661371, lng: -83.87795127390056, image: "https://i.imgur.com/fM5mU91.png", image_title: "American Base", image_scaling: 2, letter: "A", description: "Base Alpha"},
-        {lat: 42.73696669495791, lng: -83.44919754479162, image: "https://i.imgur.com/fM5mU91.png", image_title: "American Base", image_scaling: 2, letter: "B", description: "Base Beta"},
-        {lat: 42.26323434052922, lng: -82.45957817551827, image: "https://i.imgur.com/ttim5xF.png", image_title: "Canadian Base", image_scaling: 2, letter: "C", description: "Base Canada"},
-        {lat: 42.73648419374985, lng: -82.72868770058172, image: "https://i.imgur.com/fM5mU91.png", image_title: "American Base", image_scaling: 2, letter: "D", description: "Base Delta"},
+        {lat: IHA.lat, lng: IHA.lng, image: null, image_title: null, image_scaling: 1, letter: null, description: "Neo-Detroit Institute of Human Advancement", order: -999},
     ]
+    function poiSort(poiA, poiB) {
+        if(poiA.order === poiB.order) {
+            return new Date(poiA.last_updated) - new Date(poiB.last_updated)
+        }
+        return poiB.order - poiA.order
+    }
+    POIS.sort(poiSort)
     const imageSuggestions = [
         {name: "Bus", url: "https://icon-library.net/images/google-maps-bus-icon/google-maps-bus-icon-8.jpg", image_scaling: 1},
+        {name: "American Base", url: "https://i.imgur.com/fM5mU91.png", image_scaling: 2},
+        {name: "Canadian Base", url: "https://i.imgur.com/ttim5xF.png", image_scaling: 2},
+        {name: "APC", url: "https://i.imgur.com/NiNLVG4.png", image_scaling: 2.5},
+        {name: "Explosion", url: "https://www.nicepng.com/png/full/68-684159_transparent-explosions-clip-art-explosion-transparent.png", image_scaling: 1},
     ]
     function toggleCoordinates() {
         radioSystem = !radioSystem
@@ -405,9 +415,9 @@
     function relativeHexCenter(pos,x,y) {
         let retPos = pos
         if(x!==0)
-            retPos = google.maps.geometry.spherical.computeOffset(retPos, x*hexRadius*sqrt3, 60)
+            retPos = google.maps.geometry.spherical.computeOffset(retPos, x*hexRadius()*sqrt3, 60)
         if(y!==0)
-            retPos = google.maps.geometry.spherical.computeOffset(retPos, -y*hexRadius*sqrt3, 0)
+            retPos = google.maps.geometry.spherical.computeOffset(retPos, -y*hexRadius()*sqrt3, 0)
         return retPos
     }
     /** @param x is up&right
@@ -444,13 +454,13 @@
         }
         const pos = hexCenter(x,y)
         const hexCoords = [
-            google.maps.geometry.spherical.computeOffset(pos, hexRadius, hexRot),
-            google.maps.geometry.spherical.computeOffset(pos, hexRadius, 60+hexRot),
-            google.maps.geometry.spherical.computeOffset(pos, hexRadius, 120+hexRot),
-            google.maps.geometry.spherical.computeOffset(pos, hexRadius, 180+hexRot),
-            google.maps.geometry.spherical.computeOffset(pos, hexRadius, 240+hexRot),
-            google.maps.geometry.spherical.computeOffset(pos, hexRadius, 300+hexRot),
-            google.maps.geometry.spherical.computeOffset(pos, hexRadius, hexRot),
+            google.maps.geometry.spherical.computeOffset(pos, hexRadius(), hexRot),
+            google.maps.geometry.spherical.computeOffset(pos, hexRadius(), 60+hexRot),
+            google.maps.geometry.spherical.computeOffset(pos, hexRadius(), 120+hexRot),
+            google.maps.geometry.spherical.computeOffset(pos, hexRadius(), 180+hexRot),
+            google.maps.geometry.spherical.computeOffset(pos, hexRadius(), 240+hexRot),
+            google.maps.geometry.spherical.computeOffset(pos, hexRadius(), 300+hexRot),
+            google.maps.geometry.spherical.computeOffset(pos, hexRadius(), hexRot),
         ]
         const hexObj = {
             ...getHexType(x,y)
@@ -569,6 +579,7 @@
         document.getElementById("image").value = poi.image
         document.getElementById("image_title").value = poi.image_title
         document.getElementById("image_scaling").value = poi.image_scaling ? Number.parseFloat(poi.image_scaling) : 1
+        document.getElementById("order").value = poi.order ? poi.order : 1
         document.getElementById("letter").value = poi.letter
         document.getElementById("description").value = poi.description
         document.getElementById("poiActionButton").innerHTML = "Update PoI"
@@ -622,17 +633,19 @@
         const image = document.getElementById("image").value
         const image_title = document.getElementById("image_title").value
         const image_scaling = document.getElementById("image_scaling").value
+        const order = document.getElementById("order").value
         const letter = document.getElementById("letter").value
         const description = document.getElementById("description").value
-        createPOI(_id,id,lat,lng,image,image_title,image_scaling,letter,description)
+        createPOI(_id,id,lat,lng,image,image_title,image_scaling,order,letter,description)
     }
-    function createPOI(_id,id,lat,lng,image,image_title,image_scaling,letter,description) {
+    function createPOI(_id,id,lat,lng,image,image_title,image_scaling,order,letter,description) {
         const data = {
             lat: lat,
             lng: lng,
             image: image ? image : null,
             image_title: image_title ? image_title : null,
             image_scaling: image_scaling ? image_scaling : 1,
+            order: order ? order : 1,
             letter: letter ? letter : null,
             description: description ? description : null,
             last_updated: new Date().toUTCString(),
@@ -738,6 +751,7 @@
         xhr.addEventListener("readystatechange", function () {
             if (this.readyState === 4) {
                 loadedPOIS = JSON.parse(this.responseText)
+                loadedPOIS.sort(poiSort)
                 displayPOIS(loadedPOIS,true);
             }
         });
@@ -759,6 +773,7 @@
         poiForm.classList.add("hidden")
         Array.from(poiForm.getElementsByTagName("input")).forEach(input => input.value = null)
         document.getElementById("image_scaling").value = 1
+        document.getElementById("order").value = 1
     }
     function updateMarker() {
         if(toUpdate) {
@@ -782,6 +797,13 @@
             }
         }
     }
+    function drawHexes() {
+        for (let x = -hexLoop; x <= hexLoop; x = x + 1) {
+            for (let y = -hexLoop; y <= hexLoop; y = y + 1) {
+                drawHex(x, y)
+            }
+        }
+    }
     function initMap() {
         // The map, centered at Neo-Detroit Institute of Human Advancement
         map = new google.maps.Map(document.getElementById("map"), {
@@ -791,14 +813,21 @@
         center = map.getCenter();
         map.addListener("click", mapClick)
         displayPOIS(POIS,false)
-        for(let x = -hexLoop; x <= hexLoop; x = x + 1) {
-            for(let y = -hexLoop; y <= hexLoop; y = y + 1) {
-                drawHex(x,y)
-            }
-        }
+        drawHexes();
         getPOIS()
         autocomplete(document.getElementById("image"),document.getElementById("image_title"),document.getElementById("image_scaling"),imageSuggestions)
         hideAndClearForm()
+        updateHexes()
+    }
+    function redrawMap() {
+        hideAndClearForm()
+        for(const hexRow in hexes) {
+            for(const hexCol in hexes[hexRow]) {
+                hexes[hexRow][hexCol].setMap(null)
+            }
+        }
+        hexes = {}
+        drawHexes()
         updateHexes()
     }
 </script>
@@ -815,6 +844,7 @@
     <input type="checkbox" id="hide_coordinates"><label for="hide_coordinates">Hide coordinates</label>
     <input type="checkbox" id="hide_grid" onchange="updateHexes()" checked><label for="hide_grid">Hide grid</label>
     <input type="checkbox" id="hide_colours" onchange="updateHexes()"><label for="hide_colours">Hide colours</label>
+    <input type="number" id="leak" onchange="redrawMap()" step="0.01" min="0.01" value="1"><label for="leak">Leak Multiplier</label>
     <div id="latLong">Click on map and lat/long will appear here. You can then save the chosen coordinates as a PoI. If you click on a user-generated PoI you'll be able to edit or delete it instead.</div>
     <div id="poiForm" class="hidden">
         <div><button onclick="hideAndClearForm()">Hide and Clear</button></div>
@@ -831,6 +861,7 @@
             <label for="image_title"><abbr title="Title for the image when displaying suggestions">Image Title:</abbr></label><input type="text" name="image_title" id="image_title" maxlength="30"/>
             <label for="image_scaling"><abbr title="Scale up image with a starting point of 30x30. So a scale of 1.5 means 45x45 pixels.">Image Scale:</abbr></label><input type="number" name="image_scaling" id="image_scaling" value="1" step="0.01" min="0.01" max="9.99"/>x
             <label for="letter"><abbr title="A letter to display on the pin">Pin letter:</abbr></label><input type="text" name="letter" id="letter" maxlength="1"/>
+            <label for="order"><abbr title="PoIs with high order will be behind PoIs with low order. If two have the same order, then the most recently modified will be in front.">Order:</abbr></label><input type="number" id="order" name="order" value="1" step="1" min="-999" max="999">
         </div>
         <div><label for="description"><abbr title="You can put HTML in the description and it will render in the PoI's popup">Description:</abbr></label><textarea name="description" id="description"></textarea></div>
         <button id="poiActionButton" onclick="createPOIFromForm()"></button>
