@@ -281,9 +281,7 @@
     ]
     // The location of Neo-Detroit Institute of Human Advancement
     const IHA = { lat:  42.338789, lng: -83.067945 };
-    const POIS = [
-        {lat: IHA.lat, lng: IHA.lng, image: null, image_title: null, image_scaling: 1, letter: null, description: "Neo-Detroit Institute of Human Advancement", order: -999},
-    ]
+    const POIS = []
     function poiSort(poiA, poiB) {
         if(poiA.order === poiB.order) {
             return new Date(poiA.last_updated) - new Date(poiB.last_updated)
