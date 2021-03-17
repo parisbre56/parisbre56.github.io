@@ -46,8 +46,12 @@
         background-color: DodgerBlue;
         color: #fff;
     }
+    button:disabled {
+        background-color: #879ab0;
+    }
     textarea {
         width: 100%;
+        height: 10em;
     }
     .autocomplete-items {
         position: absolute;
@@ -538,6 +542,7 @@
             animation: google.maps.Animation.DROP,
             position: mapsMouseEvent.latLng,
             draggable: false,
+            zIndex: 9999
         });
         setToUpdate(clickMarker)
     }
@@ -624,6 +629,7 @@
             alert(`Invalid input: ${invalid.map(input => input.name).join()}`)
             return
         }
+        const button = document.getElementById("poiActionButton").disabled = true
         const _id = document.getElementById("_id").value
         const id = document.getElementById("id").value
         const lat = document.getElementById("lat").value
@@ -673,7 +679,8 @@
 
         xhr.send(JSON.stringify(data));
     }
-    function deletePOI(_id) {
+    function deletePOI(_id, elem) {
+        elem.disabled = true
         const xhr = new XMLHttpRequest();
         xhr.withCredentials = false;
 
@@ -711,9 +718,10 @@
                     anchor: new google.maps.Point(imageScaling*15, imageScaling*15)
                 } : null,
                 map: map,
+                zIndex: -poi.order,
             })
             const poiInfoWindow = new google.maps.InfoWindow({
-                content: `${poi.description}${deletable ? (`<div><button onclick="deletePOI('${poi._id}')">Delete</button></div>Last updated: ${poi.last_updated}`) : ''}`,
+                content: `${poi.description}${deletable ? (`<div><button onclick="deletePOI('${poi._id}', this)">Delete</button></div>Last updated: ${poi.last_updated}`) : ''}`,
             });
             poiInfoWindow.deletable = deletable
             poiMarker.addListener("click", () => {
@@ -828,6 +836,33 @@
         drawHexes()
         updateHexes()
     }
+    function insertAtCursor(myField, myValue) {
+        //IE support
+        if (document.selection) {
+            myField.focus();
+            const sel = document.selection.createRange();
+            sel.text = myValue;
+        }
+        //MOZILLA and others
+        else if (myField.selectionStart || myField.selectionStart === 0) {
+            const startPos = myField.selectionStart;
+            const endPos = myField.selectionEnd;
+            myField.value = myField.value.substring(0, startPos)
+                + myValue
+                + myField.value.substring(endPos, myField.value.length);
+            myField.selectionStart = startPos+myValue.length
+            myField.selectionEnd = myField.selectionStart
+        } else {
+            myField.value += myValue;
+        }
+        myField.focus()
+    }
+    function addCitation() {
+        insertAtCursor(document.getElementById("description"), "<sup><a href='changeme' target='_blank'>Source</a></sup>")
+    }
+    function addLineBreak() {
+        insertAtCursor(document.getElementById("description"), "<br>\n")
+    }
 </script>
 
 <body>
@@ -860,6 +895,10 @@
             <label for="image_scaling"><abbr title="Scale up image with a starting point of 30x30. So a scale of 1.5 means 45x45 pixels.">Image Scale:</abbr></label><input type="number" name="image_scaling" id="image_scaling" value="1" step="0.01" min="0.01" max="9.99"/>x
             <label for="letter"><abbr title="A letter to display on the pin">Pin letter:</abbr></label><input type="text" name="letter" id="letter" maxlength="1"/>
             <label for="order"><abbr title="PoIs with high order will be behind PoIs with low order. If two have the same order, then the most recently modified will be in front.">Order:</abbr></label><input type="number" id="order" name="order" value="1" step="1" min="-999" max="999">
+        </div>
+        <div>
+            <button onclick="addCitation()">Add citation</button>
+            <button onclick="addLineBreak()">Add line break</button>
         </div>
         <div><label for="description"><abbr title="You can put HTML in the description and it will render in the PoI's popup">Description:</abbr></label><textarea name="description" id="description"></textarea></div>
         <button id="poiActionButton" onclick="createPOIFromForm()"></button>
